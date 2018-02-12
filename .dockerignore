@@ -1,0 +1,5 @@
+*
+!app
+!main.go
+!Godeps/Godeps.json
+!vendor

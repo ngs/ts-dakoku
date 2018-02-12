@@ -1,0 +1,31 @@
+{
+  "name": "TS-Dakoku",
+  "description": "Slack command to help hitting time card",
+  "keywords": [
+    "wok",
+    "go",
+    "teamspirit",
+    "salesforce"
+  ],
+  "env": {
+    "GITHUB_CLIENT_ID": {
+      "description": "GitHub's client ID. Grab yours from https://github.com/settings/applications/new"
+    },
+    "GITHUB_CLIENT_SECRET": {
+      "description": "GitHub's client secret."
+    },
+    "SECRET": {
+      "description": "Secret key for verifying GitHub Signed Webhook and secure sessions",
+      "generator": "secret"
+    }
+  },
+  "addons": [
+    {
+      "plan": "heroku-redis:hobby-dev"
+    }
+  ],
+  "image": "heroku/go:1.7",
+  "mount_dir": "src/github.com/ngs/ts-dakoku",
+  "website": "http://github.com/ngs/ts-dakoku",
+  "repository": "http://github.com/ngs/ts-dakoku"
+}
