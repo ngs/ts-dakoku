@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/nlopes/slack"
@@ -122,22 +123,51 @@ func (app *App) HandleActionCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := app.CreateContext(r)
+	ctx.UserID = data.User.ID
+	client := ctx.CreateTimeTableClient()
+	timeTable, err := client.GetTimeTable()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	text := ""
+	now := time.Now()
 	switch data.Actions[0].Name {
 	case ActionTypeLeave:
-		text = "退社しました"
+		{
+			timeTable.Leave(now)
+			text = "退社しました"
+		}
 	case ActionTypeRest:
-		text = "休憩を開始しました"
+		{
+			timeTable.Rest(now)
+			text = "休憩を開始しました"
+		}
 	case ActionTypeUnrest:
-		text = "休憩を終了しました"
+		{
+			timeTable.Unrest(now)
+			text = "休憩を終了しました"
+		}
 	case ActionTypeAttend:
-		text = "出社しました"
+		{
+			timeTable.Attend(now)
+			text = "出社しました"
+		}
 	}
 
 	params := &slack.Msg{
 		ResponseType:    "in_channel",
 		ReplaceOriginal: true,
 		Text:            text,
+	}
+
+	_, err = client.UpdateTimeTable(timeTable)
+	if err != nil {
+		params.ResponseType = "ephemeral"
+		params.ReplaceOriginal = false
+		params.Text = "勤務表の更新に失敗しました"
 	}
 
 	b, err := json.Marshal(params)
