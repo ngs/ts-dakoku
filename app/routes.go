@@ -89,33 +89,15 @@ func (app *App) HandleSlashCommand(w http.ResponseWriter, r *http.Request) {
 	ctx := app.CreateContext(r)
 	ctx.UserID = s.UserID
 
-	params := &slack.Msg{}
-
-	if ctx.GetAccessTokenForUser() == "" || s.Text == "login" {
-		state, err := ctx.StoreUserIDInState()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		params.Attachments = []slack.Attachment{
-			slack.Attachment{
-				Text: "TeamSpirit で認証を行ってください",
-				Actions: []slack.AttachmentAction{
-					slack.AttachmentAction{
-						Name:  "authenticate",
-						Text:  "認証する",
-						Style: "primary",
-						Type:  "button",
-						URL:   ctx.GetAuthenticateURL(state),
-					},
-				},
-			},
-		}
+	params, err := ctx.GetSlackMessage(s.Text)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	b, err := json.Marshal(params)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
