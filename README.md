@@ -1,12 +1,16 @@
-TeamSpirit Attendance Bot
-=========================
+TeamSpirit 打刻
+===============
 
-Environment Variables
----------------------
+Slack のコマンドで TeamSpirit の打刻をします
 
-| Name                       | Description |
-| :------------------------- | :---------  |
-| `SALESFORCE_CLIENT_ID`     |             |
-| `SALESFORCE_CLIENT_SECRET` |             |
-| `SLACK_VERIFICATION_TOKEN` |             |
-| `TEAMSPIRIT_HOST`          |             |
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
+
+環境変数
+--------
+
+| Name                       | Description                                  |
+| :------------------------- | :------------------------------------------  |
+| `SALESFORCE_CLIENT_ID`     | 接続アプリケーションのコンシューマ鍵         |
+| `SALESFORCE_CLIENT_SECRET` | 接続アプリケーションのコンシューマ秘密鍵     |
+| `SLACK_VERIFICATION_TOKEN` | Slack アプリケーション の Verification Token |
+| `TEAMSPIRIT_HOST`          | TeamSpirit のホスト名                        |

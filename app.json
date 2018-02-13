@@ -1,30 +1,33 @@
 {
   "name": "TS-Dakoku",
-  "description": "Slack command to help hitting time card",
+  "description": "Slack のコマンドで TeamSpirit の打刻をします",
   "keywords": [
-    "wok",
+    "work",
     "go",
     "teamspirit",
     "salesforce"
   ],
   "env": {
-    "GITHUB_CLIENT_ID": {
-      "description": "GitHub's client ID. Grab yours from https://github.com/settings/applications/new"
+    "SALESFORCE_CLIENT_ID": {
+      "description": "接続アプリケーションのコンシューマ鍵。SalesForce の設定より ビルド > 作成 > アプリケーション 画面より追加します"
     },
-    "GITHUB_CLIENT_SECRET": {
-      "description": "GitHub's client secret."
+    "SALESFORCE_CLIENT_SECRET": {
+      "description": "接続アプリケーションのコンシューマ秘密鍵"
     },
-    "SECRET": {
-      "description": "Secret key for verifying GitHub Signed Webhook and secure sessions",
-      "generator": "secret"
-    }
+    "SLACK_VERIFICATION_TOKEN": {
+      "description": "Slack アプリケーション の Verification Token"
+    },
+    "TEAMSPIRIT_HOST": {
+      "description": "TeamSpirit のホスト名"
+    },
+    "TZ": "Asia/Tokyo"
   },
   "addons": [
     {
       "plan": "heroku-redis:hobby-dev"
     }
   ],
-  "image": "heroku/go:1.7",
+  "image": "heroku/go:1.9.4",
   "mount_dir": "src/github.com/ngs/ts-dakoku",
   "website": "http://github.com/ngs/ts-dakoku",
   "repository": "http://github.com/ngs/ts-dakoku"
