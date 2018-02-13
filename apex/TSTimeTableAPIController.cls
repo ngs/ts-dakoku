@@ -1,19 +1,19 @@
 @RestResource(urlMapping='/Dakoku/*')
-global with sharing public class TSTimeTableAPIController {
-    private List<teamspirit__AtkEmpDay__c> empDays;
-    private String empId;
-    private Integer yearMonth;
-    private String startDate;
-    private Long lastModifiedDate;
+global with sharing class TSTimeTableAPIController {
+    public List<teamspirit__AtkEmpDay__c> empDays;
+    public String empId;
+    public Integer yearMonth;
+    public String startDate;
+    public Long lastModifiedDate;
 
     @HttpGet
-    global static List<Map<String, Integer>> getTimeTable() {
+    global static List<Map<String, Integer>> handleGetTimeTable() {
       TSTimeTableAPIController ctrl = new TSTimeTableAPIController();
       return ctrl.getTimeTable();
     }
 
     @HttpPost
-    global static String inputTimeTable(List<Map<String, Integer>> timeTable) {
+    global static String handleInputTimeTable(List<Map<String, Integer>> timeTable) {
       TSTimeTableAPIController ctrl = new TSTimeTableAPIController();
       if (ctrl.inputTimeTable(timeTable)) {
         return 'OK';
@@ -77,7 +77,7 @@ global with sharing public class TSTimeTableAPIController {
     }
 
     private Date getToday() {
-        return Date.newInstance(2018, 2, 5); // Date.today();
+        return Date.today();
     }
 
     private void loadData() {
