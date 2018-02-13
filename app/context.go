@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/garyburd/redigo/redis"
@@ -23,6 +24,7 @@ func (context *Context) GetAccessToken() string {
 	return "" // TODO
 }
 
-func (context *Context) SetAccessToken(token string, w http.ResponseWriter) error {
+func (context *Context) SetAccessToken(token string) error {
+	fmt.Printf("%v", token)
 	return nil // TODO
 }

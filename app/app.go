@@ -47,6 +47,7 @@ func Run() (*App, error) {
 	}
 	app.Port = port
 	router := app.SetupRouter()
+	fmt.Println("Listeninng on 0.0.0.0:" + strconv.Itoa(port))
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(port), apachelog.CombinedLog.Wrap(router, os.Stderr)))
 	return app, nil
 }

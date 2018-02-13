@@ -8,16 +8,27 @@ import (
 
 func (app *App) SetupRouter() *mux.Router {
 	router := mux.NewRouter()
+	router.HandleFunc("/", app.HandleIndex).Methods("GET")
 	router.HandleFunc("/favicon.ico", app.HandleFavicon).Methods("GET")
 	router.HandleFunc("/oauth/callback", app.HandleOAuthCallback).Methods("GET")
 	return router
 }
 
+func (app *App) HandleIndex(w http.ResponseWriter, r *http.Request) {
+	app.handleAsset("index.html", w, r)
+}
+
 func (app *App) HandleFavicon(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte{
-		0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x21, 0xF9, 0x04,
-		0x01, 0x00, 0x00, 0x00, 0x00, 0x2C, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x02,
-	})
+	app.handleAsset("favicon.ico", w, r)
+}
+
+func (app *App) handleAsset(filename string, w http.ResponseWriter, r *http.Request) {
+	data, err := Asset("assets/" + filename)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		w.Write(data)
+	}
 }
 
 func (app *App) HandleOAuthCallback(w http.ResponseWriter, r *http.Request) {
@@ -29,6 +40,6 @@ func (app *App) HandleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	context := app.CreateContext(r)
-	context.SetAccessToken(token, w)
+	context.SetAccessToken(token)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
