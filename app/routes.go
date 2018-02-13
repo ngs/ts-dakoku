@@ -85,7 +85,7 @@ func (app *App) HandleSlashCommand(w http.ResponseWriter, r *http.Request) {
 
 	params := &slack.Msg{}
 
-	if ctx.GetAccessTokenForUser() == "" {
+	if ctx.GetAccessTokenForUser() == "" || s.Text == "login" {
 		state, err := ctx.StoreUserIDInState()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
