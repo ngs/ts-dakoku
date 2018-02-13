@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>ts-dakoku</name>
+	<comment></comment>
+	<projects>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>com.salesforce.ide.builder.default</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>com.salesforce.ide.nature.default</nature>
+		<nature>mega.lightning.lightningNature</nature>
+	</natures>
+	<filteredResources>
+		<filter>
+			<id>1492015597432</id>
+			<name></name>
+			<type>6</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-.DS_Store</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1492015597436</id>
+			<name></name>
+			<type>6</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-.keep</arguments>
+			</matcher>
+		</filter>
+	</filteredResources>
+</projectDescription>
