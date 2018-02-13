@@ -10,10 +10,16 @@
 			<arguments>
 			</arguments>
 		</buildCommand>
+		<buildCommand>
+			<name>com.salesforce.ide.builder.online</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
 	</buildSpec>
 	<natures>
 		<nature>com.salesforce.ide.nature.default</nature>
 		<nature>mega.lightning.lightningNature</nature>
+		<nature>com.salesforce.ide.nature.online</nature>
 	</natures>
 	<filteredResources>
 		<filter>

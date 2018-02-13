@@ -1,3 +1,6 @@
 .envrc
 ts-dakoku
 Godeps/_workspace
+.settings
+apex/Referenced Packages
+apex/**/*.zip
