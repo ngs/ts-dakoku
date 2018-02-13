@@ -13,20 +13,20 @@ import (
 )
 
 type App struct {
-	Port                          int
-	ClientSecret                  string
-	ClientID                      string
-	SlashCommandVerificationToken string
-	StateStoreKey                 string
-	AccessTokenStoreKey           string
-	RedisConn                     redis.Conn
+	Port                   int
+	ClientSecret           string
+	ClientID               string
+	SlackVerificationToken string
+	StateStoreKey          string
+	AccessTokenStoreKey    string
+	RedisConn              redis.Conn
 }
 
 func New() (*App, error) {
 	app := &App{}
 	clientSecret := os.Getenv("SALESFORCE_CLIENT_SECRET")
 	clientID := os.Getenv("SALESFORCE_CLIENT_ID")
-	slashCommandVerificationToken := os.Getenv("SLASH_COMMAND_VERIFICATION_TOKEN")
+	slackVerificationToken := os.Getenv("SLACK_VERIFICATION_TOKEN")
 	var errVars = []string{}
 	if clientSecret == "" {
 		errVars = append(errVars, "SALESFORCE_CLIENT_SECRET")
@@ -34,8 +34,8 @@ func New() (*App, error) {
 	if clientID == "" {
 		errVars = append(errVars, "SALESFORCE_CLIENT_ID")
 	}
-	if slashCommandVerificationToken == "" {
-		errVars = append(errVars, "SLASH_COMMAND_VERIFICATION_TOKEN")
+	if slackVerificationToken == "" {
+		errVars = append(errVars, "SLACK_VERIFICATION_TOKEN")
 	}
 	if len(errVars) > 0 {
 		return app, fmt.Errorf("%s are not configured.", strings.Join(errVars, ", "))
@@ -55,7 +55,7 @@ func New() (*App, error) {
 
 	app.ClientID = clientID
 	app.ClientSecret = clientSecret
-	app.SlashCommandVerificationToken = slashCommandVerificationToken
+	app.SlackVerificationToken = slackVerificationToken
 	if err := app.SetupRedis(); err != nil {
 		return app, err
 	}

@@ -81,7 +81,7 @@ func (app *App) HandleSlashCommand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !s.ValidateToken(app.SlashCommandVerificationToken) {
+	if !s.ValidateToken(app.SlackVerificationToken) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
