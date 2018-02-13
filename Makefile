@@ -7,3 +7,6 @@ godep-save:
 
 bindata:
 	go-bindata -pkg app -o ./app/bindata.go assets
+
+test:
+	go test ./app
