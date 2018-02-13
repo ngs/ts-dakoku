@@ -13,6 +13,7 @@ func (app *App) SetupRouter() *mux.Router {
 	router := mux.NewRouter()
 	router.HandleFunc("/", app.HandleIndex).Methods("GET")
 	router.HandleFunc("/favicon.ico", app.HandleFavicon).Methods("GET")
+	router.HandleFunc("/success", app.HandleAuthSuccess).Methods("GET")
 	router.HandleFunc("/oauth/callback", app.HandleOAuthCallback).Methods("GET")
 	router.HandleFunc("/oauth/authenticate/{state}", app.HandleAuthenticate).Methods("GET")
 	router.HandleFunc("/hooks/slash", app.HandleSlashCommand).Methods("POST")
@@ -21,6 +22,10 @@ func (app *App) SetupRouter() *mux.Router {
 
 func (app *App) HandleIndex(w http.ResponseWriter, r *http.Request) {
 	app.handleAsset("index.html", w, r)
+}
+
+func (app *App) HandleAuthSuccess(w http.ResponseWriter, r *http.Request) {
+	app.handleAsset("success.html", w, r)
 }
 
 func (app *App) HandleFavicon(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +67,7 @@ func (app *App) HandleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx.UserID = ctx.GetUserIDForState(state)
 	ctx.SetAccessToken(token)
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Redirect(w, r, "/success", http.StatusFound)
 }
 
 func (app *App) HandleSlashCommand(w http.ResponseWriter, r *http.Request) {
