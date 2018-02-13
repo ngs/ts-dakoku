@@ -7,6 +7,45 @@
 	],
 	"Deps": [
 		{
+			"ImportPath": "github.com/garyburd/redigo/internal",
+			"Comment": "v1.0.0-5-gffa8d46",
+			"Rev": "ffa8d46ada782d81cfda81a0fbd9f45ceae448e8"
+		},
+		{
+			"ImportPath": "github.com/garyburd/redigo/redis",
+			"Comment": "v1.0.0-5-gffa8d46",
+			"Rev": "ffa8d46ada782d81cfda81a0fbd9f45ceae448e8"
+		},
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Comment": "v1.1-7-g08b5f42",
+			"Rev": "08b5f424b9271eedf6f9f0ce86cb9396ed337a42"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Comment": "v1.4.0-13-gac112f7",
+			"Rev": "ac112f7d75a0714af1bd86ab17749b31f7809640"
+		},
+		{
+			"ImportPath": "github.com/gorilla/securecookie",
+			"Comment": "v1.1-4-gc13558c",
+			"Rev": "c13558c2b1c44da35e0eb043053609a5ba3a1f19"
+		},
+		{
+			"ImportPath": "github.com/gorilla/sessions",
+			"Rev": "7ab2742f1e374be6675e9a4eca54fe529221ae3a"
+		},
+		{
+			"ImportPath": "github.com/lestrrat/go-apache-logformat",
+			"Comment": "v2.0.0-4-g0f5817c",
+			"Rev": "0f5817c5c9e626d408c4d68e3d90fd7697e97d5f"
+		},
+		{
+			"ImportPath": "github.com/pkg/errors",
+			"Comment": "v0.8.0-5-gc605e28",
+			"Rev": "c605e284fe17294bda444b34710735b29d1a9d90"
+		},
+		{
 			"ImportPath": "golang.org/x/net/context",
 			"Rev": "ddf80d0970594e2e4cccf5a98861cad3d9eaa4cd"
 		},
