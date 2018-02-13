@@ -36,9 +36,19 @@
 			"Rev": "7ab2742f1e374be6675e9a4eca54fe529221ae3a"
 		},
 		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Comment": "v1.2.0-28-g4ac9097",
+			"Rev": "4ac909741dfa57448bfadfdbca0cf7eeaa68f0e2"
+		},
+		{
 			"ImportPath": "github.com/lestrrat/go-apache-logformat",
 			"Comment": "v2.0.0-4-g0f5817c",
 			"Rev": "0f5817c5c9e626d408c4d68e3d90fd7697e97d5f"
+		},
+		{
+			"ImportPath": "github.com/nlopes/slack",
+			"Comment": "v0.2.0",
+			"Rev": "8ab4d0b364ef1e9af5d102531da20d5ec902b6c4"
 		},
 		{
 			"ImportPath": "github.com/pkg/errors",

@@ -13,16 +13,18 @@ import (
 )
 
 type App struct {
-	Port         int
-	ClientSecret string
-	ClientID     string
-	RedisConn    redis.Conn
+	Port                          int
+	ClientSecret                  string
+	ClientID                      string
+	SlashCommandVerificationToken string
+	RedisConn                     redis.Conn
 }
 
 func New() (*App, error) {
 	app := &App{}
 	clientSecret := os.Getenv("SALESFORCE_CLIENT_SECRET")
 	clientID := os.Getenv("SALESFORCE_CLIENT_ID")
+	slashCommandVerificationToken := os.Getenv("SLASH_COMMAND_VERIFICATION_TOKEN")
 	var errVars = []string{}
 	if clientSecret == "" {
 		errVars = append(errVars, "SALESFORCE_CLIENT_SECRET")
@@ -30,8 +32,17 @@ func New() (*App, error) {
 	if clientID == "" {
 		errVars = append(errVars, "SALESFORCE_CLIENT_ID")
 	}
+	if slashCommandVerificationToken == "" {
+		errVars = append(errVars, "SLASH_COMMAND_VERIFICATION_TOKEN")
+	}
 	if len(errVars) > 0 {
 		return app, fmt.Errorf("%s are not configured.", strings.Join(errVars, ", "))
+	}
+	app.ClientID = clientID
+	app.ClientSecret = clientSecret
+	app.SlashCommandVerificationToken = slashCommandVerificationToken
+	if err := app.SetupRedis(); err != nil {
+		return app, err
 	}
 	return app, nil
 }
