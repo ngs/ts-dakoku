@@ -138,22 +138,22 @@ func (app *App) HandleActionCallback(w http.ResponseWriter, r *http.Request) {
 	case ActionTypeLeave:
 		{
 			timeTable.Leave(now)
-			text = "退社しました"
+			text = "退社しました :house:"
 		}
 	case ActionTypeRest:
 		{
 			timeTable.Rest(now)
-			text = "休憩を開始しました"
+			text = "休憩を開始しました :coffee: "
 		}
 	case ActionTypeUnrest:
 		{
 			timeTable.Unrest(now)
-			text = "休憩を終了しました"
+			text = "休憩を終了しました :computer:"
 		}
 	case ActionTypeAttend:
 		{
 			timeTable.Attend(now)
-			text = "出社しました"
+			text = "出社しました :office:"
 		}
 	}
 
@@ -167,7 +167,7 @@ func (app *App) HandleActionCallback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		params.ResponseType = "ephemeral"
 		params.ReplaceOriginal = false
-		params.Text = "勤務表の更新に失敗しました"
+		params.Text = "勤務表の更新に失敗しました :warning: "
 	}
 
 	b, err := json.Marshal(params)
