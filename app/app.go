@@ -19,6 +19,7 @@ type App struct {
 	SlackVerificationToken string
 	StateStoreKey          string
 	AccessTokenStoreKey    string
+	TeamSpiritHost         string
 	RedisConn              redis.Conn
 }
 
@@ -27,6 +28,7 @@ func New() (*App, error) {
 	clientSecret := os.Getenv("SALESFORCE_CLIENT_SECRET")
 	clientID := os.Getenv("SALESFORCE_CLIENT_ID")
 	slackVerificationToken := os.Getenv("SLACK_VERIFICATION_TOKEN")
+	teamSpilitHost := os.Getenv("TEAMSPIRIT_HOST")
 	var errVars = []string{}
 	if clientSecret == "" {
 		errVars = append(errVars, "SALESFORCE_CLIENT_SECRET")
@@ -36,6 +38,9 @@ func New() (*App, error) {
 	}
 	if slackVerificationToken == "" {
 		errVars = append(errVars, "SLACK_VERIFICATION_TOKEN")
+	}
+	if teamSpilitHost == "" {
+		errVars = append(errVars, "TEAMSPIRIT_HOST")
 	}
 	if len(errVars) > 0 {
 		return app, fmt.Errorf("%s are not configured.", strings.Join(errVars, ", "))
@@ -56,6 +61,7 @@ func New() (*App, error) {
 	app.ClientID = clientID
 	app.ClientSecret = clientSecret
 	app.SlackVerificationToken = slackVerificationToken
+	app.TeamSpiritHost = teamSpilitHost
 	if err := app.SetupRedis(); err != nil {
 		return app, err
 	}

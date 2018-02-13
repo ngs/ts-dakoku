@@ -18,6 +18,7 @@ type Context struct {
 	UserID              string
 	StateStoreKey       string
 	AccessTokenStoreKey string
+	TeamSpiritHost      string
 }
 
 func (app *App) CreateContext(r *http.Request) *Context {
@@ -27,6 +28,7 @@ func (app *App) CreateContext(r *http.Request) *Context {
 		ClientSecret:        app.ClientSecret,
 		StateStoreKey:       app.StateStoreKey,
 		AccessTokenStoreKey: app.AccessTokenStoreKey,
+		TeamSpiritHost:      app.TeamSpiritHost,
 		Request:             r,
 	}
 	return ctx

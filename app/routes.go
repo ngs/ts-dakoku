@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -128,9 +127,12 @@ func (app *App) HandleActionCallback(w http.ResponseWriter, r *http.Request) {
 	case ActionTypeLeave:
 		text = "退社しました"
 	case ActionTypeRest:
-		text = "休憩中になりました"
+		text = "休憩を開始しました"
+	case ActionTypeUnrest:
+		text = "休憩を終了しました"
+	case ActionTypeAttend:
+		text = "出社しました"
 	}
-	fmt.Printf("data %v name: %v text: %v payload: %v", data, data.Name, text, payload)
 
 	params := &slack.Msg{
 		ResponseType:    "in_channel",

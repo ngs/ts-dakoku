@@ -10,7 +10,8 @@ const (
 )
 
 func (ctx *Context) GetSlackMessage(text string) (*slack.Msg, error) {
-	if ctx.GetAccessTokenForUser() == "" || text == "login" {
+	client := ctx.CreateTimeTableClient()
+	if client.AccessToken == "" || text == "login" {
 		state, err := ctx.StoreUserIDInState()
 		if err != nil {
 			return nil, err
@@ -33,30 +34,74 @@ func (ctx *Context) GetSlackMessage(text string) (*slack.Msg, error) {
 			},
 		}, nil
 	}
+	timeTable, err := client.GetTimeTable()
+	if err != nil {
+		return nil, err
+	}
+	if timeTable.IsLeaving() {
+		return &slack.Msg{
+			Text: "既に退社済です。打刻修正は TeamSpirit で行なってください。",
+		}, nil
+	}
+	if timeTable.IsResting() {
+		return &slack.Msg{
+			Attachments: []slack.Attachment{
+				slack.Attachment{
+					CallbackID: "attendance_button",
+					Actions: []slack.AttachmentAction{
+						slack.AttachmentAction{
+							Name:  ActionTypeUnrest,
+							Text:  "休憩を終了する",
+							Style: "default",
+							Type:  "button",
+						},
+					},
+				},
+			},
+		}, nil
+	}
+	if timeTable.IsAttending() {
+		return &slack.Msg{
+			Attachments: []slack.Attachment{
+				slack.Attachment{
+					CallbackID: "attendance_button",
+					Actions: []slack.AttachmentAction{
+						slack.AttachmentAction{
+							Name:  ActionTypeRest,
+							Text:  "休憩を開始する",
+							Style: "default",
+							Type:  "button",
+						},
+						slack.AttachmentAction{
+							Name:  ActionTypeLeave,
+							Text:  "退社する",
+							Style: "danger",
+							Type:  "button",
+							Confirm: &slack.ConfirmationField{
+								Text:        "退社しますか？",
+								OkText:      "はい",
+								DismissText: "いいえ",
+							},
+						},
+					},
+				},
+			},
+		}, nil
+	}
 	return &slack.Msg{
 		Attachments: []slack.Attachment{
 			slack.Attachment{
 				CallbackID: "attendance_button",
 				Actions: []slack.AttachmentAction{
 					slack.AttachmentAction{
-						Name:  ActionTypeRest,
-						Text:  "休憩を開始する",
-						Style: "default",
+						Name:  ActionTypeAttend,
+						Text:  "出社する",
+						Style: "primary",
 						Type:  "button",
-					},
-					slack.AttachmentAction{
-						Name:  ActionTypeLeave,
-						Text:  "退社する",
-						Style: "danger",
-						Type:  "button",
-						Confirm: &slack.ConfirmationField{
-							Text:        "退社しますか？",
-							OkText:      "はい",
-							DismissText: "いいえ",
-						},
 					},
 				},
 			},
 		},
 	}, nil
+
 }
