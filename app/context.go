@@ -64,6 +64,11 @@ func (ctx *Context) StoreUserIDInState() (string, error) {
 	return state, err
 }
 
+func (ctx *Context) DeleteState(state string) error {
+	_, err := ctx.RedisConn.Do("HDEL", ctx.StateStoreKey, state)
+	return err
+}
+
 func (ctx *Context) generateState() string {
 	state := RandomString(24)
 	exists, _ := redis.Bool(ctx.RedisConn.Do("HEXISTS", ctx.StateStoreKey, state))

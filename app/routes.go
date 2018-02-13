@@ -67,6 +67,7 @@ func (app *App) HandleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx.UserID = ctx.GetUserIDForState(state)
 	ctx.SetAccessToken(token)
+	ctx.DeleteState(state)
 	http.Redirect(w, r, "/success", http.StatusFound)
 }
 
