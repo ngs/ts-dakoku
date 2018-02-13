@@ -24,6 +24,7 @@ func (ctx *Context) GetSlackMessage(text string) (*slack.Msg, error) {
 					Actions: []slack.AttachmentAction{
 						slack.AttachmentAction{
 							Name:  "authenticate",
+							Value: "authenticate",
 							Text:  "認証する",
 							Style: "primary",
 							Type:  "button",
@@ -51,6 +52,7 @@ func (ctx *Context) GetSlackMessage(text string) (*slack.Msg, error) {
 					Actions: []slack.AttachmentAction{
 						slack.AttachmentAction{
 							Name:  ActionTypeUnrest,
+							Value: ActionTypeUnrest,
 							Text:  "休憩を終了する",
 							Style: "default",
 							Type:  "button",
@@ -68,12 +70,14 @@ func (ctx *Context) GetSlackMessage(text string) (*slack.Msg, error) {
 					Actions: []slack.AttachmentAction{
 						slack.AttachmentAction{
 							Name:  ActionTypeRest,
+							Value: ActionTypeRest,
 							Text:  "休憩を開始する",
 							Style: "default",
 							Type:  "button",
 						},
 						slack.AttachmentAction{
 							Name:  ActionTypeLeave,
+							Value: ActionTypeLeave,
 							Text:  "退社する",
 							Style: "danger",
 							Type:  "button",
@@ -95,6 +99,7 @@ func (ctx *Context) GetSlackMessage(text string) (*slack.Msg, error) {
 				Actions: []slack.AttachmentAction{
 					slack.AttachmentAction{
 						Name:  ActionTypeAttend,
+						Value: ActionTypeAttend,
 						Text:  "出社する",
 						Style: "primary",
 						Type:  "button",
