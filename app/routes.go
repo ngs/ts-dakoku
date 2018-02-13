@@ -17,6 +17,7 @@ func (app *App) SetupRouter() *mux.Router {
 	router.HandleFunc("/oauth/callback", app.HandleOAuthCallback).Methods("GET")
 	router.HandleFunc("/oauth/authenticate/{state}", app.HandleAuthenticate).Methods("GET")
 	router.HandleFunc("/hooks/slash", app.HandleSlashCommand).Methods("POST")
+	router.HandleFunc("/hooks/interactive", app.HandleActionCallback).Methods("POST")
 	return router
 }
 
@@ -74,7 +75,6 @@ func (app *App) HandleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 func (app *App) HandleSlashCommand(w http.ResponseWriter, r *http.Request) {
 	app.ReconnectRedisIfNeeeded()
 	s, err := slack.SlashCommandParse(r)
-	fmt.Printf("Command: %v Error:%v\n", s, err)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -93,6 +93,49 @@ func (app *App) HandleSlashCommand(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	b, err := json.Marshal(params)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(b)
+}
+
+func (app *App) HandleActionCallback(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	payload := r.PostForm.Get("payload")
+
+	var data slack.AttachmentActionCallback
+	if err := json.Unmarshal([]byte(payload), &data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if data.Token != app.SlackVerificationToken {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	text := ""
+	switch data.Actions[0].Name {
+	case ActionTypeLeave:
+		text = "退社しました"
+	case ActionTypeRest:
+		text = "休憩中になりました"
+	}
+	fmt.Printf("data %v name: %v text: %v payload: %v", data, data.Name, text, payload)
+
+	params := &slack.Msg{
+		ResponseType:    "in_channel",
+		ReplaceOriginal: true,
+		Text:            text,
 	}
 
 	b, err := json.Marshal(params)
