@@ -11,19 +11,23 @@ import (
 )
 
 type Context struct {
-	RedisConn    redis.Conn
-	Request      *http.Request
-	ClientSecret string
-	ClientID     string
-	UserID       string
+	RedisConn           redis.Conn
+	Request             *http.Request
+	ClientSecret        string
+	ClientID            string
+	UserID              string
+	StateStoreKey       string
+	AccessTokenStoreKey string
 }
 
 func (app *App) CreateContext(r *http.Request) *Context {
 	ctx := &Context{
-		RedisConn:    app.RedisConn,
-		ClientID:     app.ClientID,
-		ClientSecret: app.ClientSecret,
-		Request:      r,
+		RedisConn:           app.RedisConn,
+		ClientID:            app.ClientID,
+		ClientSecret:        app.ClientSecret,
+		StateStoreKey:       app.StateStoreKey,
+		AccessTokenStoreKey: app.AccessTokenStoreKey,
+		Request:             r,
 	}
 	return ctx
 }
@@ -32,20 +36,53 @@ func (ctx *Context) GetOAuthCallbackURL() string {
 	return "https://" + ctx.Request.Host + "/oauth/callback"
 }
 
+func (ctx *Context) GetAuthenticateURL(state string) string {
+	return "https://" + ctx.Request.Host + "/oauth/authenticate/" + state
+}
 func (ctx *Context) GetAccessTokenForUser() string {
-	return "" // TODO
+	return ctx.getVariableInHash(ctx.AccessTokenStoreKey, ctx.UserID)
+}
+
+func (ctx *Context) GetUserIDForState(state string) string {
+	return ctx.getVariableInHash(ctx.StateStoreKey, state)
+}
+
+func (ctx *Context) getVariableInHash(hashKey string, key string) string {
+	res, err := ctx.RedisConn.Do("HGET", hashKey, key)
+	if err != nil {
+		return ""
+	}
+	if data, ok := res.([]byte); ok {
+		return string(data)
+	}
+	return ""
+}
+
+func (ctx *Context) StoreUserIDInState() (string, error) {
+	state := ctx.generateState()
+	_, err := redis.Bool(ctx.RedisConn.Do("HSET", ctx.StateStoreKey, state, ctx.UserID))
+	return state, err
+}
+
+func (ctx *Context) generateState() string {
+	state := RandomString(24)
+	exists, _ := redis.Bool(ctx.RedisConn.Do("HEXISTS", ctx.StateStoreKey, state))
+	if exists {
+		return ctx.generateState()
+	}
+	return state
 }
 
 func (ctx *Context) SetAccessToken(token string) error {
-	fmt.Printf("%v", token)
-	return nil // TODO
+	_, err := redis.Bool(ctx.RedisConn.Do("HSET", ctx.AccessTokenStoreKey, ctx.UserID, token))
+	return err
 }
 
 func (ctx *Context) GetOAuth2Config() *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     ctx.ClientID,
 		ClientSecret: ctx.ClientSecret,
-		Scopes:       []string{"full"},
+		Scopes:       []string{},
 		RedirectURL:  ctx.GetOAuthCallbackURL(),
 		Endpoint: oauth2.Endpoint{
 			// https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_understanding_oauth_endpoints.htm

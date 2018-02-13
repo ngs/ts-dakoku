@@ -17,6 +17,8 @@ type App struct {
 	ClientSecret                  string
 	ClientID                      string
 	SlashCommandVerificationToken string
+	StateStoreKey                 string
+	AccessTokenStoreKey           string
 	RedisConn                     redis.Conn
 }
 
@@ -38,6 +40,19 @@ func New() (*App, error) {
 	if len(errVars) > 0 {
 		return app, fmt.Errorf("%s are not configured.", strings.Join(errVars, ", "))
 	}
+
+	if k := os.Getenv("STATE_STORE_KEY"); k != "" {
+		app.StateStoreKey = k
+	} else {
+		app.StateStoreKey = "tsdakoku:states"
+	}
+
+	if k := os.Getenv("ACCESS_TOKEN_STORE_KEY"); k != "" {
+		app.AccessTokenStoreKey = k
+	} else {
+		app.AccessTokenStoreKey = "tsdakoku:access_tokens"
+	}
+
 	app.ClientID = clientID
 	app.ClientSecret = clientSecret
 	app.SlashCommandVerificationToken = slashCommandVerificationToken
