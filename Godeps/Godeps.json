@@ -8,13 +8,13 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/garyburd/redigo/internal",
-			"Comment": "v1.0.0-5-gffa8d46",
-			"Rev": "ffa8d46ada782d81cfda81a0fbd9f45ceae448e8"
+			"Comment": "v1.4.0",
+			"Rev": "d1ed5c67e5794de818ea85e6b522fda02623a484"
 		},
 		{
 			"ImportPath": "github.com/garyburd/redigo/redis",
-			"Comment": "v1.0.0-5-gffa8d46",
-			"Rev": "ffa8d46ada782d81cfda81a0fbd9f45ceae448e8"
+			"Comment": "v1.4.0",
+			"Rev": "d1ed5c67e5794de818ea85e6b522fda02623a484"
 		},
 		{
 			"ImportPath": "github.com/gorilla/context",
