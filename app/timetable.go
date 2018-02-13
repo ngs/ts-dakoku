@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"gopkg.in/guregu/null.v3"
 )
 
 type TimeTable struct {
@@ -14,9 +16,9 @@ type TimeTable struct {
 }
 
 type TimeTableItem struct {
-	From int `json:"from"`
-	To   int `json:"to"`
-	Type int `json:"type"`
+	From null.Int `json:"from,omitempty"`
+	To   null.Int `json:"to,omitempty"`
+	Type int      `json:"type"`
 }
 
 type TimeTableClient struct {
@@ -24,13 +26,22 @@ type TimeTableClient struct {
 	Endpoint    string
 }
 
-func convertTime(time time.Time) int {
-	return 0
+func convertTime(time time.Time) null.Int {
+	hour, min, _ := time.Clock()
+	return null.IntFrom(int64(hour*60 + min))
+}
+
+func (item *TimeTableItem) IsAttendance() bool {
+	return item.Type == 1
+}
+
+func (item *TimeTableItem) IsRest() bool {
+	return item.Type == 21 || item.Type == 22
 }
 
 func (tt *TimeTable) IsAttending() bool {
 	for _, item := range tt.Items {
-		if item.Type == 1 && item.From > 0 {
+		if item.IsAttendance() && item.From.Valid {
 			return true
 		}
 	}
@@ -39,7 +50,7 @@ func (tt *TimeTable) IsAttending() bool {
 
 func (tt *TimeTable) IsResting() bool {
 	for _, item := range tt.Items {
-		if (item.Type == 21 || item.Type == 22) && item.To == 0 {
+		if item.IsRest() && !item.To.Valid {
 			return true
 		}
 	}
@@ -48,11 +59,68 @@ func (tt *TimeTable) IsResting() bool {
 
 func (tt *TimeTable) IsLeaving() bool {
 	for _, item := range tt.Items {
-		if item.Type == 1 && item.To > 0 {
+		if item.IsAttendance() && item.To.Valid {
 			return true
 		}
 	}
 	return false
+}
+
+func (tt *TimeTable) Attend(time time.Time) bool {
+	items := tt.Items
+	for i, item := range items {
+		if item.IsAttendance() {
+			items[i].From = convertTime(time)
+			tt.Items = items
+			return true
+		}
+	}
+	tt.Items = append(tt.Items, TimeTableItem{
+		From: convertTime(time),
+		Type: 1,
+	})
+	return true
+}
+
+func (tt *TimeTable) Rest(time time.Time) bool {
+	tt.Items = append(tt.Items, TimeTableItem{
+		From: convertTime(time),
+		Type: 21,
+	})
+	return true
+}
+
+func (tt *TimeTable) Unrest(time time.Time) bool {
+	items := tt.Items
+	for i, item := range items {
+		if item.IsRest() && !item.To.Valid {
+			items[i].To = convertTime(time)
+			tt.Items = items
+			return true
+		}
+	}
+	tt.Items = append(tt.Items, TimeTableItem{
+		To:   convertTime(time),
+		Type: 21,
+	})
+	return true
+
+}
+
+func (tt *TimeTable) Leave(time time.Time) bool {
+	items := tt.Items
+	for i, item := range items {
+		if item.Type == 1 {
+			items[i].To = convertTime(time)
+			tt.Items = items
+			return true
+		}
+	}
+	tt.Items = append(tt.Items, TimeTableItem{
+		To:   convertTime(time),
+		Type: 1,
+	})
+	return true
 }
 
 func (ctx *Context) CreateTimeTableClient() *TimeTableClient {

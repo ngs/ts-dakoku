@@ -57,7 +57,7 @@
 		},
 		{
 			"ImportPath": "golang.org/x/net/context",
-			"Rev": "ddf80d0970594e2e4cccf5a98861cad3d9eaa4cd"
+			"Rev": "8b4af36cd21a1f85a7484b49feb7c79363106d8e"
 		},
 		{
 			"ImportPath": "golang.org/x/oauth2",
@@ -66,6 +66,11 @@
 		{
 			"ImportPath": "golang.org/x/oauth2/internal",
 			"Rev": "1e695b1c8febf17aad3bfa7bf0a819ef94b98ad5"
+		},
+		{
+			"ImportPath": "gopkg.in/guregu/null.v3",
+			"Comment": "v3.3.0",
+			"Rev": "e81d6d8d57747b34d7c5fe0d20ebf57692f04ea9"
 		}
 	]
 }
