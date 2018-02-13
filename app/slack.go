@@ -41,7 +41,7 @@ func (ctx *Context) GetSlackMessage(text string) (*slack.Msg, error) {
 	}
 	if timeTable.IsLeaving() {
 		return &slack.Msg{
-			Text: "既に退社済です。打刻修正は TeamSpirit で行なってください。",
+			Text: "既に退社済です。打刻修正は <https://" + ctx.TeamSpiritHost + "|TeamSpirit> で行なってください。",
 		}, nil
 	}
 	if timeTable.IsResting() {
