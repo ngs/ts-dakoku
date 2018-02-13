@@ -43,37 +43,41 @@ global with sharing class TSTimeTableAPIController {
             }
         }
 
-        List<Map<String, Integer>> timetable = new List<Map<String, Integer>>();
+        List<Map<String, Integer>> timeTable = new List<Map<String, Integer>>();
+        if (empToday == null) {
+          return timeTable;
+        }
+
         Map<String, Integer> item = new Map<String, Integer>{};
 
         item.put('from', Integer.valueOf(empToday.teamspirit__StartTime__c));
         item.put('to', Integer.valueOf(empToday.teamspirit__EndTime__c));
         item.put('type', 1);
-        timetable.add(item);
+        timeTable.add(item);
 
-        List<String> timetableStrItems = empToday.teamspirit__TimeTable__c.split(':');
-        for (String timetableStr: timetableStrItems) {
-            if(timetableStr == '') {
+        List<String> timeTableStrItems = empToday.teamspirit__TimeTable__c.split(':');
+        for (String timeTableStr: timeTableStrItems) {
+            if(timeTableStr == '') {
                 continue;
             }
             item = new Map<String, Integer>{};
 
-            String str = timetableStr.substring(0, 4);
-            str = timetableStr.substring(0, 4);
+            String str = timeTableStr.substring(0, 4);
+            str = timeTableStr.substring(0, 4);
             if (str != '----') {
                 item.put('from', Integer.valueOf(str));
             }
-            str = timetableStr.substring(4, 8);
+            str = timeTableStr.substring(4, 8);
             if (str != '----') {
                 item.put('to', Integer.valueOf(str));
             }
-            str = timetableStr.substring(8, 10);
+            str = timeTableStr.substring(8, 10);
             item.put('type', Integer.valueOf(str));
 
-            timetable.add(item);
+            timeTable.add(item);
         }
 
-        return timetable;
+        return timeTable;
     }
 
     private Date getToday() {
