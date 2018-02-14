@@ -2,7 +2,7 @@ package app
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"net/http"
 
 	"golang.org/x/oauth2"
@@ -11,25 +11,27 @@ import (
 )
 
 type Context struct {
-	RedisConn           redis.Conn
-	Request             *http.Request
-	ClientSecret        string
-	ClientID            string
-	UserID              string
-	StateStoreKey       string
-	AccessTokenStoreKey string
-	TeamSpiritHost      string
+	RedisConn              redis.Conn
+	Request                *http.Request
+	ClientSecret           string
+	ClientID               string
+	UserID                 string
+	StateStoreKey          string
+	TokenStoreKey          string
+	TeamSpiritHost         string
+	SlackVerificationToken string
 }
 
 func (app *App) CreateContext(r *http.Request) *Context {
 	ctx := &Context{
-		RedisConn:           app.RedisConn,
-		ClientID:            app.ClientID,
-		ClientSecret:        app.ClientSecret,
-		StateStoreKey:       app.StateStoreKey,
-		AccessTokenStoreKey: app.AccessTokenStoreKey,
-		TeamSpiritHost:      app.TeamSpiritHost,
-		Request:             r,
+		RedisConn:              app.RedisConn,
+		ClientID:               app.ClientID,
+		ClientSecret:           app.ClientSecret,
+		StateStoreKey:          app.StateStoreKey,
+		TokenStoreKey:          app.TokenStoreKey,
+		TeamSpiritHost:         app.TeamSpiritHost,
+		SlackVerificationToken: app.SlackVerificationToken,
+		Request:                r,
 	}
 	return ctx
 }
@@ -40,9 +42,6 @@ func (ctx *Context) GetOAuthCallbackURL() string {
 
 func (ctx *Context) GetAuthenticateURL(state string) string {
 	return "https://" + ctx.Request.Host + "/oauth/authenticate/" + state
-}
-func (ctx *Context) GetAccessTokenForUser() string {
-	return ctx.getVariableInHash(ctx.AccessTokenStoreKey, ctx.UserID)
 }
 
 func (ctx *Context) GetUserIDForState(state string) string {
@@ -80,8 +79,12 @@ func (ctx *Context) generateState() string {
 	return state
 }
 
-func (ctx *Context) SetAccessToken(token string) error {
-	_, err := redis.Bool(ctx.RedisConn.Do("HSET", ctx.AccessTokenStoreKey, ctx.UserID, token))
+func (ctx *Context) SetAccessToken(token *oauth2.Token) error {
+	tokenJSON, err := json.Marshal(token)
+	if err != nil {
+		return err
+	}
+	_, err = redis.Bool(ctx.RedisConn.Do("HSET", ctx.TokenStoreKey, ctx.UserID, tokenJSON))
 	return err
 }
 
@@ -99,27 +102,30 @@ func (ctx *Context) GetOAuth2Config() *oauth2.Config {
 	}
 }
 
-func (ctx *Context) GetAccessToken(code string, state string) (string, error) {
+func (ctx *Context) GetAccessTokenForUser() *oauth2.Token {
+	tokenJSON := ctx.getVariableInHash(ctx.TokenStoreKey, ctx.UserID)
+	var token oauth2.Token
+	if err := json.Unmarshal([]byte(tokenJSON), &token); err != nil {
+		return nil
+	}
+	return &token
+}
+
+func (ctx *Context) GetAccessToken(code string, state string) (*oauth2.Token, error) {
 	config := ctx.GetOAuth2Config()
-	fmt.Printf("state: %+v\n", state)
 	t, err := config.Exchange(context.TODO(), code)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return t.AccessToken, nil
+	return t, nil
 }
 
 func (ctx *Context) GetOAuth2Client() *http.Client {
 	token := ctx.GetAccessTokenForUser()
-	if token == "" {
+	if token == nil {
 		return nil
 	}
-	return GetOAuth2ClientForToken(token)
-}
-
-func GetOAuth2ClientForToken(token string) *http.Client {
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)
+	src := ctx.GetOAuth2Config().TokenSource(context.TODO(), token)
+	ts := oauth2.ReuseTokenSource(token, src)
 	return oauth2.NewClient(oauth2.NoContext, ts)
 }

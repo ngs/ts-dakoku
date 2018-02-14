@@ -41,17 +41,27 @@ func TestMarshalTimeTable(t *testing.T) {
 	Test{`{"timeTable":[{"from":1,"to":2,"type":3},{"from":4,"to":null,"type":1}]}`, string(b)}.Compare(t)
 }
 
-func TestUnmershalTimeTableItem(t *testing.T) {
-	var items []TimeTableItem
-	json.Unmarshal([]byte(`[{"from":600, "to": null, "type": 1}, {"from":780, "to": 840, "type": 21}]`), &items)
+func TestParseTimeTable(t *testing.T) {
+	timeTable, err := ParseTimeTable([]byte(`[{"from":600, "to": null, "type": 1}, {"from":780, "to": 840, "type": 21}]`))
 	for _, test := range []Test{
-		{2, len(items)},
-		{int64(600), items[0].From.ValueOrZero()},
-		{false, items[0].To.Valid},
-		{1, items[0].Type},
-		{int64(780), items[1].From.ValueOrZero()},
-		{int64(840), items[1].To.ValueOrZero()},
-		{21, items[1].Type},
+		{nil, err},
+		{2, len(timeTable.Items)},
+		{int64(600), timeTable.Items[0].From.ValueOrZero()},
+		{false, timeTable.Items[0].To.Valid},
+		{1, timeTable.Items[0].Type},
+		{int64(780), timeTable.Items[1].From.ValueOrZero()},
+		{int64(840), timeTable.Items[1].To.ValueOrZero()},
+		{21, timeTable.Items[1].Type},
+	} {
+		test.Compare(t)
+	}
+}
+
+func TestParseTimeTableError(t *testing.T) {
+	timeTable, err := ParseTimeTable([]byte(`[{"message":"Session expired or invalid","errorCode":"INVALID_SESSION_ID"}]`))
+	for _, test := range []Test{
+		{"Error: Session expired or invalid (INVALID_SESSION_ID)", err.Error()},
+		{true, timeTable == nil},
 	} {
 		test.Compare(t)
 	}

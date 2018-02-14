@@ -3,6 +3,7 @@ package app
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -21,9 +22,26 @@ type TimeTableItem struct {
 	Type int      `json:"type"`
 }
 
+type TimeTableError struct {
+	Message string `json:"message"`
+	Code    string `json:"errorCode"`
+}
+
 type TimeTableClient struct {
-	AccessToken string
-	Endpoint    string
+	HTTPClient *http.Client
+	Endpoint   string
+}
+
+func ParseTimeTable(body []byte) (*TimeTable, error) {
+	var errors []TimeTableError
+	if err := json.Unmarshal(body, &errors); err == nil && len(errors) > 0 && errors[0].Code != "" {
+		return nil, fmt.Errorf("Error: %+v (%+v)", errors[0].Message, errors[0].Code)
+	}
+	var items []TimeTableItem
+	if err := json.Unmarshal(body, &items); err != nil {
+		return nil, err
+	}
+	return &TimeTable{Items: items}, nil
 }
 
 func convertTime(time time.Time) null.Int {
@@ -125,8 +143,8 @@ func (tt *TimeTable) Leave(time time.Time) bool {
 
 func (ctx *Context) CreateTimeTableClient() *TimeTableClient {
 	return &TimeTableClient{
-		AccessToken: ctx.GetAccessTokenForUser(),
-		Endpoint:    "https://" + ctx.TeamSpiritHost + "/services/apexrest/Dakoku",
+		HTTPClient: ctx.GetOAuth2Client(),
+		Endpoint:   "https://" + ctx.TeamSpiritHost + "/services/apexrest/Dakoku",
 	}
 }
 
@@ -135,12 +153,10 @@ func (client *TimeTableClient) doRequest(method string, data io.Reader) ([]byte,
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Authorization", "Bearer "+client.AccessToken)
 	if data != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	httpClient := &http.Client{}
-	res, err := httpClient.Do(req)
+	res, err := client.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -152,11 +168,7 @@ func (client *TimeTableClient) GetTimeTable() (*TimeTable, error) {
 	if err != nil {
 		return nil, err
 	}
-	var items []TimeTableItem
-	if err := json.Unmarshal(body, &items); err != nil {
-		return nil, err
-	}
-	return &TimeTable{Items: items}, nil
+	return ParseTimeTable(body)
 }
 
 func (client *TimeTableClient) UpdateTimeTable(timeTable *TimeTable) (bool, error) {
@@ -165,6 +177,19 @@ func (client *TimeTableClient) UpdateTimeTable(timeTable *TimeTable) (bool, erro
 		return false, err
 	}
 	body, err := client.doRequest("POST", bytes.NewBuffer(b))
+	if err != nil {
+		return false, err
+	}
+	return string(body) == "OK", nil
+}
+
+func (client *TimeTableClient) SetAttendance(attendance bool) (bool, error) {
+	data := map[string]bool{"attendance": attendance}
+	b, err := json.Marshal(data)
+	if err != nil {
+		return false, err
+	}
+	body, err := client.doRequest("PUT", bytes.NewBuffer(b))
 	if err != nil {
 		return false, err
 	}
