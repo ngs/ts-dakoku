@@ -1,8 +1,10 @@
 package app
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"net/http"
 	"time"
 
 	"github.com/nlopes/slack"
@@ -82,6 +84,14 @@ func (ctx *Context) GetActionCallback() (*slack.Msg, error) {
 		params.Text = "勤務表の更新に失敗しました :warning: "
 	}
 
+	b, err := json.Marshal(params)
+	if err != nil {
+		return nil, err
+	}
+	_, err = http.Post(data.ResponseURL, "application/json", bytes.NewBuffer(b))
+	if err != nil {
+		return nil, err
+	}
 	return params, nil
 }
 

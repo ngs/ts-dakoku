@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"golang.org/x/oauth2"
@@ -117,7 +116,6 @@ func (app *App) HandleActionCallback(w http.ResponseWriter, r *http.Request) {
 
 	b, err := json.Marshal(params)
 	if err != nil {
-		fmt.Printf("%v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"golang.org/x/oauth2"
@@ -103,7 +102,6 @@ func (ctx *Context) GetOAuth2Config() *oauth2.Config {
 
 func (ctx *Context) GetAccessToken(code string, state string) (string, error) {
 	config := ctx.GetOAuth2Config()
-	fmt.Printf("state: %+v\n", state)
 	t, err := config.Exchange(context.TODO(), code)
 	if err != nil {
 		return "", err
