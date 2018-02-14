@@ -82,7 +82,7 @@ global with sharing class TSTimeTableAPIController {
         item.put('type', 1);
         timeTable.add(item);
 
-        List<String> timeTableStrItems = empToday.teamspirit__TimeTable__c.split(':');
+        List<String> timeTableStrItems = (empToday.teamspirit__TimeTable__c == null ? '' : empToday.teamspirit__TimeTable__c).split(':');
         for (String timeTableStr: timeTableStrItems) {
             if(timeTableStr == '') {
                 continue;
