@@ -1,6 +1,12 @@
 package app
 
-import "github.com/nlopes/slack"
+import (
+	"encoding/json"
+	"errors"
+	"time"
+
+	"github.com/nlopes/slack"
+)
 
 const (
 	ActionTypeAttend = "attend"
@@ -9,35 +15,109 @@ const (
 	ActionTypeLeave  = "leave"
 )
 
-func (ctx *Context) GetSlackMessage(text string) (*slack.Msg, error) {
+func (ctx *Context) GetActionCallback() (*slack.Msg, error) {
+	r := ctx.Request
+	if err := r.ParseForm(); err != nil {
+		return nil, err
+	}
+	payload := r.PostForm.Get("payload")
+
+	var data slack.AttachmentActionCallback
+	if err := json.Unmarshal([]byte(payload), &data); err != nil {
+		return nil, err
+	}
+
+	if data.Token != ctx.SlackVerificationToken {
+		return nil, errors.New("VERIFICATION_TOKEN")
+	}
+
+	ctx.UserID = data.User.ID
+
 	client := ctx.CreateTimeTableClient()
-	if client.AccessToken == "" || text == "login" {
-		state, err := ctx.StoreUserIDInState()
-		if err != nil {
-			return nil, err
+	timeTable, err := client.GetTimeTable()
+	if err != nil {
+		return ctx.GetLoginSlackMessage()
+	}
+
+	text := ""
+	now := time.Now()
+	attendance := -1
+	switch data.Actions[0].Name {
+	case ActionTypeLeave:
+		{
+			attendance = 0
+			text = "退社しました :house:"
 		}
-		return &slack.Msg{
-			Attachments: []slack.Attachment{
-				slack.Attachment{
-					Text:       "TeamSpirit で認証を行ってください",
-					CallbackID: "authentication_button",
-					Actions: []slack.AttachmentAction{
-						slack.AttachmentAction{
-							Name:  "authenticate",
-							Value: "authenticate",
-							Text:  "認証する",
-							Style: "primary",
-							Type:  "button",
-							URL:   ctx.GetAuthenticateURL(state),
-						},
+	case ActionTypeRest:
+		{
+			timeTable.Rest(now)
+			text = "休憩を開始しました :coffee: "
+		}
+	case ActionTypeUnrest:
+		{
+			timeTable.Unrest(now)
+			text = "休憩を終了しました :computer:"
+		}
+	case ActionTypeAttend:
+		{
+			attendance = 1
+			text = "出社しました :office:"
+		}
+	}
+
+	params := &slack.Msg{
+		ResponseType:    "in_channel",
+		ReplaceOriginal: true,
+		Text:            text,
+	}
+
+	if attendance != -1 {
+		_, err = client.SetAttendance(attendance == 1)
+	} else {
+		_, err = client.UpdateTimeTable(timeTable)
+	}
+	if err != nil {
+		params.ResponseType = "ephemeral"
+		params.ReplaceOriginal = false
+		params.Text = "勤務表の更新に失敗しました :warning: "
+	}
+
+	return params, nil
+}
+
+func (ctx *Context) GetLoginSlackMessage() (*slack.Msg, error) {
+	state, err := ctx.StoreUserIDInState()
+	if err != nil {
+		return nil, err
+	}
+	return &slack.Msg{
+		Attachments: []slack.Attachment{
+			slack.Attachment{
+				Text:       "TeamSpirit で認証を行ってください",
+				CallbackID: "authentication_button",
+				Actions: []slack.AttachmentAction{
+					slack.AttachmentAction{
+						Name:  "authenticate",
+						Value: "authenticate",
+						Text:  "認証する",
+						Style: "primary",
+						Type:  "button",
+						URL:   ctx.GetAuthenticateURL(state),
 					},
 				},
 			},
-		}, nil
+		},
+	}, nil
+}
+
+func (ctx *Context) GetSlackMessage(text string) (*slack.Msg, error) {
+	client := ctx.CreateTimeTableClient()
+	if client.AccessToken == "" || text == "login" {
+		return ctx.GetLoginSlackMessage()
 	}
 	timeTable, err := client.GetTimeTable()
 	if err != nil {
-		return nil, err
+		return ctx.GetLoginSlackMessage()
 	}
 	if timeTable.IsLeaving() {
 		return &slack.Msg{

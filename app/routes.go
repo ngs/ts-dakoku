@@ -2,8 +2,8 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
-	"time"
 
 	"golang.org/x/oauth2"
 
@@ -107,78 +107,17 @@ func (app *App) HandleSlashCommand(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) HandleActionCallback(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	ctx := app.CreateContext(r)
+	params, err := ctx.GetActionCallback()
 
-	payload := r.PostForm.Get("payload")
-
-	var data slack.AttachmentActionCallback
-	if err := json.Unmarshal([]byte(payload), &data); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if data.Token != app.SlackVerificationToken {
+	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	ctx := app.CreateContext(r)
-	ctx.UserID = data.User.ID
-	client := ctx.CreateTimeTableClient()
-	timeTable, err := client.GetTimeTable()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	text := ""
-	now := time.Now()
-	attendance := -1
-	switch data.Actions[0].Name {
-	case ActionTypeLeave:
-		{
-			attendance = 0
-			text = "退社しました :house:"
-		}
-	case ActionTypeRest:
-		{
-			timeTable.Rest(now)
-			text = "休憩を開始しました :coffee: "
-		}
-	case ActionTypeUnrest:
-		{
-			timeTable.Unrest(now)
-			text = "休憩を終了しました :computer:"
-		}
-	case ActionTypeAttend:
-		{
-			attendance = 1
-			text = "出社しました :office:"
-		}
-	}
-
-	params := &slack.Msg{
-		ResponseType:    "in_channel",
-		ReplaceOriginal: true,
-		Text:            text,
-	}
-
-	if attendance != -1 {
-		_, err = client.SetAttendance(attendance == 1)
-	} else {
-		_, err = client.UpdateTimeTable(timeTable)
-	}
-	if err != nil {
-		params.ResponseType = "ephemeral"
-		params.ReplaceOriginal = false
-		params.Text = "勤務表の更新に失敗しました :warning: "
-	}
-
 	b, err := json.Marshal(params)
 	if err != nil {
+		fmt.Printf("%v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

@@ -11,25 +11,27 @@ import (
 )
 
 type Context struct {
-	RedisConn           redis.Conn
-	Request             *http.Request
-	ClientSecret        string
-	ClientID            string
-	UserID              string
-	StateStoreKey       string
-	AccessTokenStoreKey string
-	TeamSpiritHost      string
+	RedisConn              redis.Conn
+	Request                *http.Request
+	ClientSecret           string
+	ClientID               string
+	UserID                 string
+	StateStoreKey          string
+	AccessTokenStoreKey    string
+	TeamSpiritHost         string
+	SlackVerificationToken string
 }
 
 func (app *App) CreateContext(r *http.Request) *Context {
 	ctx := &Context{
-		RedisConn:           app.RedisConn,
-		ClientID:            app.ClientID,
-		ClientSecret:        app.ClientSecret,
-		StateStoreKey:       app.StateStoreKey,
-		AccessTokenStoreKey: app.AccessTokenStoreKey,
-		TeamSpiritHost:      app.TeamSpiritHost,
-		Request:             r,
+		RedisConn:              app.RedisConn,
+		ClientID:               app.ClientID,
+		ClientSecret:           app.ClientSecret,
+		StateStoreKey:          app.StateStoreKey,
+		AccessTokenStoreKey:    app.AccessTokenStoreKey,
+		TeamSpiritHost:         app.TeamSpiritHost,
+		SlackVerificationToken: app.SlackVerificationToken,
+		Request:                r,
 	}
 	return ctx
 }

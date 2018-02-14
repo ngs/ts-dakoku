@@ -3,6 +3,7 @@ package app
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -21,9 +22,26 @@ type TimeTableItem struct {
 	Type int      `json:"type"`
 }
 
+type TimeTableError struct {
+	Message string `json:"message"`
+	Code    string `json:"errorCode"`
+}
+
 type TimeTableClient struct {
 	AccessToken string
 	Endpoint    string
+}
+
+func ParseTimeTable(body []byte) (*TimeTable, error) {
+	var errors []TimeTableError
+	if err := json.Unmarshal(body, &errors); err == nil && len(errors) > 0 && errors[0].Code != "" {
+		return nil, fmt.Errorf("Error: %+v (%+v)", errors[0].Message, errors[0].Code)
+	}
+	var items []TimeTableItem
+	if err := json.Unmarshal(body, &items); err != nil {
+		return nil, err
+	}
+	return &TimeTable{Items: items}, nil
 }
 
 func convertTime(time time.Time) null.Int {
@@ -152,11 +170,7 @@ func (client *TimeTableClient) GetTimeTable() (*TimeTable, error) {
 	if err != nil {
 		return nil, err
 	}
-	var items []TimeTableItem
-	if err := json.Unmarshal(body, &items); err != nil {
-		return nil, err
-	}
-	return &TimeTable{Items: items}, nil
+	return ParseTimeTable(body)
 }
 
 func (client *TimeTableClient) UpdateTimeTable(timeTable *TimeTable) (bool, error) {
