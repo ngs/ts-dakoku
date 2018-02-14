@@ -30,7 +30,7 @@ func (ctx *Context) GetActionCallback() (*slack.Msg, error) {
 	}
 
 	if data.Token != ctx.SlackVerificationToken {
-		return nil, errors.New("VERIFICATION_TOKEN")
+		return nil, errors.New("Invalid token")
 	}
 
 	ctx.UserID = data.User.ID
