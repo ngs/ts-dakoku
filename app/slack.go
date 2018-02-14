@@ -103,7 +103,7 @@ func (ctx *Context) GetLoginSlackMessage() (*slack.Msg, error) {
 	return &slack.Msg{
 		Attachments: []slack.Attachment{
 			slack.Attachment{
-				Text:       "TeamSpirit で認証を行ってください",
+				Text:       "TeamSpirit で認証を行って、再度 `/ts` コマンドを実行してください :bow:",
 				CallbackID: "authentication_button",
 				Actions: []slack.AttachmentAction{
 					slack.AttachmentAction{
@@ -122,7 +122,7 @@ func (ctx *Context) GetLoginSlackMessage() (*slack.Msg, error) {
 
 func (ctx *Context) GetSlackMessage(text string) (*slack.Msg, error) {
 	client := ctx.CreateTimeTableClient()
-	if client.AccessToken == "" || text == "login" {
+	if client.HTTPClient == nil || text == "login" {
 		return ctx.GetLoginSlackMessage()
 	}
 	timeTable, err := client.GetTimeTable()

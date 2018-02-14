@@ -53,6 +53,7 @@ func (app *App) HandleAuthenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	config := ctx.GetOAuth2Config()
+	config.Scopes = []string{"refresh_token", "full"}
 	url := config.AuthCodeURL(state, oauth2.AccessTypeOffline)
 	http.Redirect(w, r, url, http.StatusSeeOther)
 }

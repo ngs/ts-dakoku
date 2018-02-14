@@ -28,8 +28,8 @@ type TimeTableError struct {
 }
 
 type TimeTableClient struct {
-	AccessToken string
-	Endpoint    string
+	HTTPClient *http.Client
+	Endpoint   string
 }
 
 func ParseTimeTable(body []byte) (*TimeTable, error) {
@@ -143,8 +143,8 @@ func (tt *TimeTable) Leave(time time.Time) bool {
 
 func (ctx *Context) CreateTimeTableClient() *TimeTableClient {
 	return &TimeTableClient{
-		AccessToken: ctx.GetAccessTokenForUser(),
-		Endpoint:    "https://" + ctx.TeamSpiritHost + "/services/apexrest/Dakoku",
+		HTTPClient: ctx.GetOAuth2Client(),
+		Endpoint:   "https://" + ctx.TeamSpiritHost + "/services/apexrest/Dakoku",
 	}
 }
 
@@ -153,12 +153,10 @@ func (client *TimeTableClient) doRequest(method string, data io.Reader) ([]byte,
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Authorization", "Bearer "+client.AccessToken)
 	if data != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	httpClient := &http.Client{}
-	res, err := httpClient.Do(req)
+	res, err := client.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

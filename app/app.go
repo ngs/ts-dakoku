@@ -18,7 +18,7 @@ type App struct {
 	ClientID               string
 	SlackVerificationToken string
 	StateStoreKey          string
-	AccessTokenStoreKey    string
+	TokenStoreKey          string
 	TeamSpiritHost         string
 	RedisConn              redis.Conn
 }
@@ -52,10 +52,10 @@ func New() (*App, error) {
 		app.StateStoreKey = "tsdakoku:states"
 	}
 
-	if k := os.Getenv("ACCESS_TOKEN_STORE_KEY"); k != "" {
-		app.AccessTokenStoreKey = k
+	if k := os.Getenv("OAUTH_TOKEN_STORE_KEY"); k != "" {
+		app.TokenStoreKey = k
 	} else {
-		app.AccessTokenStoreKey = "tsdakoku:access_tokens"
+		app.TokenStoreKey = "tsdakoku:oauth_tokens"
 	}
 
 	app.ClientID = clientID
