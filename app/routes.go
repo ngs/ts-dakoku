@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"golang.org/x/oauth2"
+
 	"github.com/gorilla/mux"
 	"github.com/nlopes/slack"
 )
@@ -52,7 +54,7 @@ func (app *App) HandleAuthenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	config := ctx.GetOAuth2Config()
-	url := config.AuthCodeURL(state)
+	url := config.AuthCodeURL(state, oauth2.AccessTypeOffline)
 	http.Redirect(w, r, url, http.StatusSeeOther)
 }
 
