@@ -107,6 +107,7 @@ func (app *App) HandleSlashCommand(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) HandleActionCallback(w http.ResponseWriter, r *http.Request) {
+	app.ReconnectRedisIfNeeeded()
 	ctx := app.CreateContext(r)
 	params, err := ctx.GetActionCallback()
 

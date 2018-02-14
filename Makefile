@@ -9,7 +9,7 @@ bindata:
 	go-bindata -pkg app -o ./app/bindata.go assets
 
 test:
-	go test ./app
+	go test -v ./app
 
 test-apex:
 	docker pull atsnngs/force-com
