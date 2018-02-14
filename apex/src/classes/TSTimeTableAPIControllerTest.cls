@@ -12,7 +12,7 @@
             teamspirit__TimeTable__c = '0720076521:1080----21:1290132021:1440147021:'
         );
         ctrl.empDays = new List<teamspirit__AtkEmpDay__c>{ obj };
-        res = ctrl.getTimeTable();
+            res = ctrl.getTimeTable();
         System.assert(res.size() == 5);
     }
 

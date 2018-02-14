@@ -10,26 +10,26 @@ global with sharing class TSTimeTableAPIController {
 
     @HttpGet
     global static List<Map<String, Integer>> handleGetTimeTable() {
-      TSTimeTableAPIController ctrl = new TSTimeTableAPIController();
-      return ctrl.getTimeTable();
+        TSTimeTableAPIController ctrl = new TSTimeTableAPIController();
+        return ctrl.getTimeTable();
     }
 
     @HttpPost
     global static String handleInputTimeTable(List<Map<String, Integer>> timeTable) {
-      TSTimeTableAPIController ctrl = new TSTimeTableAPIController();
-      if (ctrl.inputTimeTable(timeTable)) {
-        return 'OK';
-      }
-      return 'NG';
+        TSTimeTableAPIController ctrl = new TSTimeTableAPIController();
+        if (ctrl.inputTimeTable(timeTable)) {
+            return 'OK';
+        }
+        return 'NG';
     }
 
     @HttpPut
     global static String handleSetAttendance(Boolean attendance) {
-      TSTimeTableAPIController ctrl = new TSTimeTableAPIController();
-      if (ctrl.setAttendance(attendance)) {
-        return 'OK';
-      }
-      return 'NG';
+        TSTimeTableAPIController ctrl = new TSTimeTableAPIController();
+        if (ctrl.setAttendance(attendance)) {
+            return 'OK';
+        }
+        return 'NG';
     }
 
     public TSTimeTableAPIController() {
@@ -50,7 +50,7 @@ global with sharing class TSTimeTableAPIController {
         Integer timeHM = now.hour() * 60 + now.minute();
         Map<String, Object> params = getBaseParams();
         Map<String, Object> input = new Map<String, Object>{'comment' => '', 'time' => timeHM, 'face' => attendance ? 0 : 1, 'fix' => false, 'type' => 10};
-        params.put('input', input);
+            params.put('input', input);
         params.put('prevFlag', false);
         params.put('stdStartTime', stdStartTime);
         params.put('stdEndTime', stdEndTime);
@@ -72,12 +72,12 @@ global with sharing class TSTimeTableAPIController {
 
         List<Map<String, Integer>> timeTable = new List<Map<String, Integer>>();
         if (empToday == null) {
-          return timeTable;
+            return timeTable;
         }
 
         Map<String, Integer> item = new Map<String, Integer>{};
 
-        item.put('from', Integer.valueOf(empToday.teamspirit__StartTime__c));
+            item.put('from', Integer.valueOf(empToday.teamspirit__StartTime__c));
         item.put('to', Integer.valueOf(empToday.teamspirit__EndTime__c));
         item.put('type', 1);
         timeTable.add(item);
@@ -89,7 +89,7 @@ global with sharing class TSTimeTableAPIController {
             }
             item = new Map<String, Integer>{};
 
-            String str = timeTableStr.substring(0, 4);
+                String str = timeTableStr.substring(0, 4);
             str = timeTableStr.substring(0, 4);
             if (str != '----') {
                 item.put('from', Integer.valueOf(str));
@@ -119,10 +119,13 @@ global with sharing class TSTimeTableAPIController {
         List<teamspirit__AtkConfig__c > configs = (List<teamspirit__AtkConfig__c>) empMonth.get('configs');
         teamspirit__AtkConfig__c config = configs != null && configs.size() > 0 ? configs[0] : null;
         if (config != null) {
-	        stdStartTime = Integer.valueOf(config.teamspirit__StdStartTime__c);
+            stdStartTime = Integer.valueOf(config.teamspirit__StdStartTime__c);
             stdEndTime = Integer.valueOf(config.teamspirit__StdEndTime__c);
-	    }
+        }
         empDays = (List<teamspirit__AtkEmpDay__c>) empMonth.get('empDays');
+        if (empDays == null) {
+            empDays = new List<teamspirit__AtkEmpDay__c>();
+        }
         yearMonth = (Integer) empMonth.get('yearMonth');
         startDate = (String) empMonth.get('startDate');
     }
