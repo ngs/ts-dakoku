@@ -170,3 +170,16 @@ func (client *TimeTableClient) UpdateTimeTable(timeTable *TimeTable) (bool, erro
 	}
 	return string(body) == "OK", nil
 }
+
+func (client *TimeTableClient) SetAttendance(attendance bool) (bool, error) {
+	data := map[string]bool{"attendance": attendance}
+	b, err := json.Marshal(data)
+	if err != nil {
+		return false, err
+	}
+	body, err := client.doRequest("PUT", bytes.NewBuffer(b))
+	if err != nil {
+		return false, err
+	}
+	return string(body) == "OK", nil
+}

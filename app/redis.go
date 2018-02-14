@@ -1,7 +1,6 @@
 package app
 
 import (
-	"errors"
 	"os"
 	"time"
 
@@ -44,5 +43,4 @@ func (app *App) SetupRedis() error {
 		app.RedisConn = conn
 		return nil
 	}
-	return errors.New("Could not connect to Redis")
 }

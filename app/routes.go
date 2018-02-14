@@ -136,10 +136,11 @@ func (app *App) HandleActionCallback(w http.ResponseWriter, r *http.Request) {
 
 	text := ""
 	now := time.Now()
+	attendance := -1
 	switch data.Actions[0].Name {
 	case ActionTypeLeave:
 		{
-			timeTable.Leave(now)
+			attendance = 0
 			text = "退社しました :house:"
 		}
 	case ActionTypeRest:
@@ -154,7 +155,7 @@ func (app *App) HandleActionCallback(w http.ResponseWriter, r *http.Request) {
 		}
 	case ActionTypeAttend:
 		{
-			timeTable.Attend(now)
+			attendance = 1
 			text = "出社しました :office:"
 		}
 	}
@@ -165,7 +166,11 @@ func (app *App) HandleActionCallback(w http.ResponseWriter, r *http.Request) {
 		Text:            text,
 	}
 
-	_, err = client.UpdateTimeTable(timeTable)
+	if attendance != -1 {
+		_, err = client.SetAttendance(attendance == 1)
+	} else {
+		_, err = client.UpdateTimeTable(timeTable)
+	}
 	if err != nil {
 		params.ResponseType = "ephemeral"
 		params.ReplaceOriginal = false
