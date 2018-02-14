@@ -7,12 +7,7 @@ jobs:
     working_directory: /go/src/github.com/ngs/ts-dakoku
     steps:
       - checkout
-      - run:
-          name: 'Run tests'
-          command: make test
-      - store_artifacts:
-          name: 'Store binary'
-          path: ts-dakoku
+      - run: make test
 
 workflows:
   version: 2
