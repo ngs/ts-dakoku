@@ -1,0 +1,21 @@
+version: 2
+jobs:
+  test:
+    docker:
+      - image: circleci/golang:1.9.4
+      - image: redis:3.0.7-alpine
+    working_directory: /go/src/github.com/ngs/ts-dakoku
+    steps:
+      - checkout
+      - run:
+          name: 'Run tests'
+          command: make test
+      - store_artifacts:
+          name: 'Store binary'
+          path: ts-dakoku
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test
