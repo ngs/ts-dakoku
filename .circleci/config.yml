@@ -9,6 +9,8 @@ jobs:
     steps:
       - checkout
       - run: make test
+      - run: go get github.com/mattn/goveralls
+      - run: goveralls -coverprofile=coverage/cover.out -service=circle-ci
       - store_artifacts:
           path: coverage
           destination: coverage

@@ -7,6 +7,7 @@ Slack のコマンドで TeamSpirit の打刻をします
 
 [![Docker Automated build](https://img.shields.io/docker/automated/atsnngs/ts-dakoku.svg?maxAge=2592000)](https://hub.docker.com/r/atsnngs/ts-dakoku/)
 [![CircleCI](https://circleci.com/gh/ngs/ts-dakoku.svg?style=svg&circle-token=9c154b7114e81b3ed97b85121e98c7ee5a9ad23c)](https://circleci.com/gh/ngs/ts-dakoku)
+[![Coverage Status](https://coveralls.io/repos/github/ngs/ts-dakoku/badge.svg?branch=master)](https://coveralls.io/github/ngs/ts-dakoku?branch=master)
 
 導入手順
 -------
