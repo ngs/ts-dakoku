@@ -142,10 +142,14 @@ func (tt *TimeTable) Leave(time time.Time) bool {
 }
 
 func (ctx *Context) CreateTimeTableClient() *TimeTableClient {
-	return &TimeTableClient{
+	if ctx.TimeTableClient != nil {
+		return ctx.TimeTableClient
+	}
+	ctx.TimeTableClient = &TimeTableClient{
 		HTTPClient: ctx.GetOAuth2Client(),
 		Endpoint:   "https://" + ctx.TeamSpiritHost + "/services/apexrest/Dakoku",
 	}
+	return ctx.TimeTableClient
 }
 
 func (client *TimeTableClient) doRequest(method string, data io.Reader) ([]byte, error) {

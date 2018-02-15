@@ -16,6 +16,7 @@ type Context struct {
 	TokenStoreKey          string
 	TeamSpiritHost         string
 	SlackVerificationToken string
+	TimeTableClient        *TimeTableClient
 }
 
 func (app *App) CreateContext(r *http.Request) *Context {

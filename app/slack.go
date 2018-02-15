@@ -53,7 +53,7 @@ func (ctx *Context) GetActionCallback() (*slack.Msg, error) {
 	case ActionTypeRest:
 		{
 			timeTable.Rest(now)
-			text = "休憩を開始しました :coffee: "
+			text = "休憩を開始しました :coffee:"
 		}
 	case ActionTypeUnrest:
 		{
@@ -73,25 +73,23 @@ func (ctx *Context) GetActionCallback() (*slack.Msg, error) {
 		Text:            text,
 	}
 
+	var ok bool
 	if attendance != -1 {
-		_, err = client.SetAttendance(attendance == 1)
+		ok, err = client.SetAttendance(attendance == 1)
 	} else {
-		_, err = client.UpdateTimeTable(timeTable)
+		ok, err = client.UpdateTimeTable(timeTable)
 	}
-	if err != nil {
+	if !ok || err != nil {
 		params.ResponseType = "ephemeral"
 		params.ReplaceOriginal = false
-		params.Text = "勤務表の更新に失敗しました :warning: "
+		params.Text = "勤務表の更新に失敗しました :warning:"
 	}
 
 	b, err := json.Marshal(params)
 	if err != nil {
 		return nil, err
 	}
-	_, err = http.Post(data.ResponseURL, "application/json", bytes.NewBuffer(b))
-	if err != nil {
-		return nil, err
-	}
+	http.Post(data.ResponseURL, "application/json", bytes.NewBuffer(b))
 	return params, nil
 }
 

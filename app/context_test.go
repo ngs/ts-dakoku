@@ -16,7 +16,7 @@ func TestCreateContext(t *testing.T) {
 		{"SALESFORCE_CLIENT_SECRET is set!", ctx.ClientSecret},
 		{"tsdakoku-test:states", ctx.StateStoreKey},
 		{"tsdakoku-test:oauth_tokens", ctx.TokenStoreKey},
-		{"TEAMSPIRIT_HOST is set!", ctx.TeamSpiritHost},
+		{"teamspirit-1234.cloudforce.test", ctx.TeamSpiritHost},
 		{"SLACK_VERIFICATION_TOKEN is set!", ctx.SlackVerificationToken},
 		{req, ctx.Request},
 	} {

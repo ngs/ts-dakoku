@@ -13,10 +13,10 @@ func createMockApp() *App {
 		"SALESFORCE_CLIENT_SECRET",
 		"SALESFORCE_CLIENT_ID",
 		"SLACK_VERIFICATION_TOKEN",
-		"TEAMSPIRIT_HOST",
 	} {
 		os.Setenv(name, name+" is set!")
 	}
+	os.Setenv("TEAMSPIRIT_HOST", "teamspirit-1234.cloudforce.test")
 	app, _ := New()
 	return app
 }
