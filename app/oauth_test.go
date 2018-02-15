@@ -28,6 +28,8 @@ func TestSetAndGetAccessToken(t *testing.T) {
 		TokenType:    "Bearer",
 	}
 	app := createMockApp()
+	app.RedisConn.Do("DEL", app.TokenStoreKey)
+	app.RedisConn.Do("DEL", app.StateStoreKey)
 	req, _ := http.NewRequest("GET", "https://example.com/test", nil)
 	ctx := app.CreateContext(req)
 	ctx.UserID = "FOO"
@@ -41,6 +43,7 @@ func TestSetAndGetAccessToken(t *testing.T) {
 	} {
 		test.Compare(t)
 	}
+	ctx = app.CreateContext(req)
 	ctx.UserID = "BAR"
 	token = ctx.GetAccessTokenForUser()
 	Test{true, token == nil}.Compare(t)

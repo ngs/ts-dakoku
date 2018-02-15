@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/garyburd/redigo/redis"
@@ -18,6 +19,9 @@ func (ctx *Context) GetAuthenticateURL(state string) string {
 }
 
 func (ctx *Context) SetAccessToken(token *oauth2.Token) error {
+	if ctx.UserID == "" {
+		return errors.New("UserID is not set")
+	}
 	tokenJSON, err := json.Marshal(token)
 	if err != nil {
 		return err
@@ -41,6 +45,9 @@ func (ctx *Context) GetOAuth2Config() *oauth2.Config {
 }
 
 func (ctx *Context) GetAccessTokenForUser() *oauth2.Token {
+	if ctx.UserID == "" {
+		return nil
+	}
 	tokenJSON := ctx.getVariableInHash(ctx.TokenStoreKey, ctx.UserID)
 	var token oauth2.Token
 	if err := json.Unmarshal([]byte(tokenJSON), &token); err != nil {
