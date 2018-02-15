@@ -86,17 +86,17 @@ func (r *Request) Path(path string) *Request {
 
 // Get specifies the GET method and the given URL path to match.
 func (r *Request) Get(path string) *Request {
-	return r.method("GET", path)
+	return r.method(http.MethodGet, path)
 }
 
 // Post specifies the POST method and the given URL path to match.
 func (r *Request) Post(path string) *Request {
-	return r.method("POST", path)
+	return r.method(http.MethodPost, path)
 }
 
 // Put specifies the PUT method and the given URL path to match.
 func (r *Request) Put(path string) *Request {
-	return r.method("PUT", path)
+	return r.method(http.MethodPut, path)
 }
 
 // Delete specifies the DELETE method and the given URL path to match.

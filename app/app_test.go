@@ -6,6 +6,11 @@ import (
 	"testing"
 )
 
+func (app *App) CleanRedis() {
+	app.RedisConn.Do("DEL", app.TokenStoreKey)
+	app.RedisConn.Do("DEL", app.StateStoreKey)
+}
+
 func createMockApp() *App {
 	os.Setenv("STATE_STORE_KEY", "tsdakoku-test:states")
 	os.Setenv("OAUTH_TOKEN_STORE_KEY", "tsdakoku-test:oauth_tokens")

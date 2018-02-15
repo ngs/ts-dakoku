@@ -97,7 +97,7 @@ r.PathPrefix("/products/")
 ...or HTTP methods:
 
 ```go
-r.Methods("GET", "POST")
+r.Methods(http.MethodGet, http.MethodPost)
 ```
 
 ...or URL schemes:
@@ -131,7 +131,7 @@ r.MatcherFunc(func(r *http.Request, rm *RouteMatch) bool {
 ```go
 r.HandleFunc("/products", ProductsHandler).
   Host("www.example.com").
-  Methods("GET").
+  Methods(http.MethodGet).
   Schemes("http")
 ```
 
@@ -190,9 +190,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 func main() {
     r := mux.NewRouter()
     r.HandleFunc("/", handler)
-    r.HandleFunc("/products", handler).Methods("POST")
-    r.HandleFunc("/articles", handler).Methods("GET")
-    r.HandleFunc("/articles/{id}", handler).Methods("GET", "PUT")
+    r.HandleFunc("/products", handler).Methods(http.MethodPost)
+    r.HandleFunc("/articles", handler).Methods(http.MethodGet)
+    r.HandleFunc("/articles/{id}", handler).Methods(http.MethodGet, http.MethodPut)
     r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
         t, err := route.GetPathTemplate()
         if err != nil {
@@ -328,9 +328,9 @@ the following prints all of the registered routes:
 ```go
 r := mux.NewRouter()
 r.HandleFunc("/", handler)
-r.HandleFunc("/products", handler).Methods("POST")
-r.HandleFunc("/articles", handler).Methods("GET")
-r.HandleFunc("/articles/{id}", handler).Methods("GET", "PUT")
+r.HandleFunc("/products", handler).Methods(http.MethodPost)
+r.HandleFunc("/articles", handler).Methods(http.MethodGet)
+r.HandleFunc("/articles/{id}", handler).Methods(http.MethodGet, http.MethodPut)
 r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
     t, err := route.GetPathTemplate()
     if err != nil {

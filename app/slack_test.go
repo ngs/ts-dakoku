@@ -24,7 +24,7 @@ func createActionCallbackRequest(actionName string, token string) *http.Request 
 	json, _ := json.Marshal(callback)
 	data := url.Values{}
 	data.Set("payload", string(json))
-	req, _ := http.NewRequest("POST", "https://example.com/hooks/interactive", strings.NewReader(data.Encode()))
+	req, _ := http.NewRequest(http.MethodPost, "https://example.com/hooks/interactive", strings.NewReader(data.Encode()))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	return req
@@ -57,8 +57,7 @@ func setupActionCallbackGocks(actionType string, responseText string) {
 func testGetActionCallbackWithActionType(t *testing.T, actionType string, successMessage string) {
 	defer gock.Off()
 	app := createMockApp()
-	app.RedisConn.Do("DEL", app.TokenStoreKey)
-	app.RedisConn.Do("DEL", app.StateStoreKey)
+	app.CleanRedis()
 	ctx := app.CreateContext(createActionCallbackRequest(actionType, "hoge"))
 	msg, err := ctx.GetActionCallback()
 	for _, test := range []Test{
@@ -135,7 +134,7 @@ func setupTimeTableGocks(items []TimeTableItem) {
 func TestGetSlackMessage(t *testing.T) {
 	defer gock.Off()
 	app := createMockApp()
-	req, _ := http.NewRequest("POST", "https://example.com/hooks/slash", bytes.NewBufferString(""))
+	req, _ := http.NewRequest(http.MethodPost, "https://example.com/hooks/slash", bytes.NewBufferString(""))
 	ctx := app.CreateContext(req)
 	ctx.UserID = "BAZ"
 	msg, err := ctx.GetSlackMessage("")

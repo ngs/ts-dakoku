@@ -12,13 +12,13 @@ import (
 
 func (app *App) SetupRouter() *mux.Router {
 	router := mux.NewRouter()
-	router.HandleFunc("/", app.HandleIndex).Methods("GET")
-	router.HandleFunc("/favicon.ico", app.HandleFavicon).Methods("GET")
-	router.HandleFunc("/success", app.HandleAuthSuccess).Methods("GET")
-	router.HandleFunc("/oauth/callback", app.HandleOAuthCallback).Methods("GET")
-	router.HandleFunc("/oauth/authenticate/{state}", app.HandleAuthenticate).Methods("GET")
-	router.HandleFunc("/hooks/slash", app.HandleSlashCommand).Methods("POST")
-	router.HandleFunc("/hooks/interactive", app.HandleActionCallback).Methods("POST")
+	router.HandleFunc("/", app.HandleIndex).Methods(http.MethodGet)
+	router.HandleFunc("/favicon.ico", app.HandleFavicon).Methods(http.MethodGet)
+	router.HandleFunc("/success", app.HandleAuthSuccess).Methods(http.MethodGet)
+	router.HandleFunc("/oauth/callback", app.HandleOAuthCallback).Methods(http.MethodGet)
+	router.HandleFunc("/oauth/authenticate/{state}", app.HandleAuthenticate).Methods(http.MethodGet)
+	router.HandleFunc("/hooks/slash", app.HandleSlashCommand).Methods(http.MethodPost)
+	router.HandleFunc("/hooks/interactive", app.HandleActionCallback).Methods(http.MethodPost)
 	return router
 }
 

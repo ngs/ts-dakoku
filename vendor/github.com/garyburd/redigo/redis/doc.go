@@ -75,7 +75,7 @@
 // the server. The following example shows a simple pipeline.
 //
 //  c.Send("SET", "foo", "bar")
-//  c.Send("GET", "foo")
+//  c.Send(http.MethodGet, "foo")
 //  c.Flush()
 //  c.Receive() // reply from SET
 //  v, err = c.Receive() // reply from GET

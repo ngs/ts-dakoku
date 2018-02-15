@@ -7,7 +7,7 @@ import (
 
 func TestCreateContext(t *testing.T) {
 	app := createMockApp()
-	req, _ := http.NewRequest("GET", "https://example.com/test", nil)
+	req, _ := http.NewRequest(http.MethodGet, "https://example.com/test", nil)
 	ctx := app.CreateContext(req)
 
 	for _, test := range []Test{

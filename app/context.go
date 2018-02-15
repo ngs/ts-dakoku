@@ -20,7 +20,7 @@ type Context struct {
 }
 
 func (app *App) CreateContext(r *http.Request) *Context {
-	ctx := &Context{
+	return &Context{
 		RedisConn:              app.RedisConn,
 		ClientID:               app.ClientID,
 		ClientSecret:           app.ClientSecret,
@@ -30,7 +30,6 @@ func (app *App) CreateContext(r *http.Request) *Context {
 		SlackVerificationToken: app.SlackVerificationToken,
 		Request:                r,
 	}
-	return ctx
 }
 
 func (ctx *Context) getVariableInHash(hashKey string, key string) string {

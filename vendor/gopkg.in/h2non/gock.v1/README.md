@@ -135,7 +135,7 @@ func TestMatchHeaders(t *testing.T) {
     Reply(200).
     BodyString("foo foo")
 
-  req, err := http.NewRequest("GET", "http://foo.com", nil)
+  req, err := http.NewRequest(http.MethodGet, "http://foo.com", nil)
   req.Header.Set("Authorization", "foo bar")
   req.Header.Set("API", "1.0")
   req.Header.Set("Accept", "text/plain")
@@ -208,7 +208,7 @@ func TestClient(t *testing.T) {
     Reply(200).
     BodyString("foo foo")
 
-  req, err := http.NewRequest("GET", "http://foo.com", nil)
+  req, err := http.NewRequest(http.MethodGet, "http://foo.com", nil)
   client := &http.Client{Transport: &http.Transport{}}
   gock.InterceptClient(client)
 

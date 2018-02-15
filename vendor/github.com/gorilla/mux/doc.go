@@ -80,7 +80,7 @@ There are several other matchers that can be added. To match path prefixes:
 
 ...or HTTP methods:
 
-	r.Methods("GET", "POST")
+	r.Methods(http.MethodGet, http.MethodPost)
 
 ...or URL schemes:
 
@@ -104,7 +104,7 @@ There are several other matchers that can be added. To match path prefixes:
 
 	r.HandleFunc("/products", ProductsHandler).
 	  Host("www.example.com").
-	  Methods("GET").
+	  Methods(http.MethodGet).
 	  Schemes("http")
 
 Setting the same matching conditions again and again can be boring, so we have

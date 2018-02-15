@@ -53,7 +53,7 @@ func fileUploadReq(ctx context.Context, path, fieldname, filename string, values
 	}
 	// Close the multipart writer or the footer won't be written
 	wr.Close()
-	req, err := http.NewRequest("POST", path, body)
+	req, err := http.NewRequest(http.MethodPost, path, body)
 	req = req.WithContext(ctx)
 	if err != nil {
 		return nil, err
@@ -121,7 +121,7 @@ func postWithMultipartResponse(ctx context.Context, client HTTPRequester, path, 
 
 func postForm(ctx context.Context, client HTTPRequester, endpoint string, values url.Values, intf interface{}, debug bool) error {
 	reqBody := strings.NewReader(values.Encode())
-	req, err := http.NewRequest("POST", endpoint, reqBody)
+	req, err := http.NewRequest(http.MethodPost, endpoint, reqBody)
 	if err != nil {
 		return err
 	}
