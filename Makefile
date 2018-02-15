@@ -8,8 +8,13 @@ godep-save:
 bindata:
 	go-bindata -pkg app -o ./app/bindata.go assets
 
+coverprofile=coverage/cover.out
+coverhtml=coverage/cover.html
+
 test:
-	go test -v ./app
+	go test -v -coverprofile=$(coverprofile) ./app
+	go tool cover -func=$(coverprofile)
+	go tool cover -html=$(coverprofile) -o=$(coverhtml)
 
 test-apex:
 	docker pull atsnngs/force-com
