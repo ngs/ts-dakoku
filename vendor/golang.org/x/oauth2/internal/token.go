@@ -156,7 +156,7 @@ func RetrieveToken(ctx context.Context, clientID, clientSecret, tokenURL string,
 	if bustedAuth && clientSecret != "" {
 		v.Set("client_secret", clientSecret)
 	}
-	req, err := http.NewRequest("POST", tokenURL, strings.NewReader(v.Encode()))
+	req, err := http.NewRequest(http.MethodPost, tokenURL, strings.NewReader(v.Encode()))
 	if err != nil {
 		return nil, err
 	}

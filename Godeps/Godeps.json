@@ -71,6 +71,11 @@
 			"ImportPath": "gopkg.in/guregu/null.v3",
 			"Comment": "v3.3.0",
 			"Rev": "e81d6d8d57747b34d7c5fe0d20ebf57692f04ea9"
+		},
+		{
+			"ImportPath": "gopkg.in/h2non/gock.v1",
+			"Comment": "v1.0.7",
+			"Rev": "26775f23aa9da4cbd47bc2600a57ac07bbf3bd20"
 		}
 	]
 }

@@ -43,7 +43,7 @@ func New() (*App, error) {
 		errVars = append(errVars, "TEAMSPIRIT_HOST")
 	}
 	if len(errVars) > 0 {
-		return app, fmt.Errorf("%s are not configured.", strings.Join(errVars, ", "))
+		return app, fmt.Errorf("%s are not configured", strings.Join(errVars, ", "))
 	}
 
 	if k := os.Getenv("STATE_STORE_KEY"); k != "" {

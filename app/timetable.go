@@ -142,10 +142,14 @@ func (tt *TimeTable) Leave(time time.Time) bool {
 }
 
 func (ctx *Context) CreateTimeTableClient() *TimeTableClient {
-	return &TimeTableClient{
+	if ctx.TimeTableClient != nil {
+		return ctx.TimeTableClient
+	}
+	ctx.TimeTableClient = &TimeTableClient{
 		HTTPClient: ctx.GetOAuth2Client(),
 		Endpoint:   "https://" + ctx.TeamSpiritHost + "/services/apexrest/Dakoku",
 	}
+	return ctx.TimeTableClient
 }
 
 func (client *TimeTableClient) doRequest(method string, data io.Reader) ([]byte, error) {
@@ -164,7 +168,7 @@ func (client *TimeTableClient) doRequest(method string, data io.Reader) ([]byte,
 }
 
 func (client *TimeTableClient) GetTimeTable() (*TimeTable, error) {
-	body, err := client.doRequest("GET", nil)
+	body, err := client.doRequest(http.MethodGet, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +180,7 @@ func (client *TimeTableClient) UpdateTimeTable(timeTable *TimeTable) (bool, erro
 	if err != nil {
 		return false, err
 	}
-	body, err := client.doRequest("POST", bytes.NewBuffer(b))
+	body, err := client.doRequest(http.MethodPost, bytes.NewBuffer(b))
 	if err != nil {
 		return false, err
 	}
@@ -189,7 +193,7 @@ func (client *TimeTableClient) SetAttendance(attendance bool) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	body, err := client.doRequest("PUT", bytes.NewBuffer(b))
+	body, err := client.doRequest(http.MethodPut, bytes.NewBuffer(b))
 	if err != nil {
 		return false, err
 	}

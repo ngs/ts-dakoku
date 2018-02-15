@@ -1,4 +1,5 @@
 version: 2
+
 jobs:
   test:
     docker:
@@ -8,6 +9,9 @@ jobs:
     steps:
       - checkout
       - run: make test
+      - store_artifacts:
+          path: coverage
+          destination: coverage
 
 workflows:
   version: 2
