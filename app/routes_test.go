@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 	"golang.org/x/oauth2"
@@ -110,6 +111,7 @@ func TestHandleAuthenticateNotFound(t *testing.T) {
 
 func TestHandleOAuthCallback(t *testing.T) {
 	defer gock.Off()
+	expiry, _ := time.Parse("2016-01-02T15:04:05Z", "0001-01-01T00:00:00Z")
 	gock.New("https://login.salesforce.com").
 		Post("/services/oauth2/token").
 		Reply(200).
@@ -117,6 +119,7 @@ func TestHandleOAuthCallback(t *testing.T) {
 			AccessToken:  "foo",
 			RefreshToken: "bar",
 			TokenType:    "Bearer",
+			Expiry:       expiry,
 		})
 
 	app := createMockApp()
@@ -126,10 +129,17 @@ func TestHandleOAuthCallback(t *testing.T) {
 	ctx := app.CreateContext(req)
 	ctx.UserID = "FOO"
 	state, _ := ctx.StoreUserIDInState()
+	token := ctx.GetAccessTokenForUser()
+	Test{true, token == nil}.Compare(t)
 	req, _ = http.NewRequest(http.MethodGet, "https://example.com/oauth/callback?state="+state+"&code=fjkfjk", nil)
 	app.SetupRouter().ServeHTTP(res, req)
+	token = ctx.GetAccessTokenForUser()
 	for _, test := range []Test{
 		{302, res.Code},
+		{false, token == nil},
+		{"bar", token.RefreshToken},
+		{"foo", token.AccessToken},
+		{false, token.Expiry.IsZero()},
 		{"/success", res.Header().Get("Location")},
 	} {
 		test.Compare(t)

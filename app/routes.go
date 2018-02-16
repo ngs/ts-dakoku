@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"golang.org/x/oauth2"
 
@@ -69,6 +70,7 @@ func (app *App) HandleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx.UserID = ctx.GetUserIDForState(state)
+	token.Expiry = time.Now().Add(time.Hour) // SalesForce always returns zero-expiry, but it expires.
 	ctx.SetAccessToken(token)
 	ctx.DeleteState(state)
 	http.Redirect(w, r, "/success", http.StatusFound)
