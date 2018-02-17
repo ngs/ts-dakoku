@@ -8,7 +8,7 @@ import (
 func TestCreateContext(t *testing.T) {
 	app := createMockApp()
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/test", nil)
-	ctx := app.CreateContext(req)
+	ctx := app.createContext(req)
 
 	for _, test := range []Test{
 		{false, ctx.RedisConn == nil},

@@ -6,6 +6,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 )
 
+// Context in request
 type Context struct {
 	RedisConn              redis.Conn
 	Request                *http.Request
@@ -16,10 +17,10 @@ type Context struct {
 	TokenStoreKey          string
 	TeamSpiritHost         string
 	SlackVerificationToken string
-	TimeTableClient        *TimeTableClient
+	TimeTableClient        *timeTableClient
 }
 
-func (app *App) CreateContext(r *http.Request) *Context {
+func (app *App) createContext(r *http.Request) *Context {
 	return &Context{
 		RedisConn:              app.RedisConn,
 		ClientID:               app.ClientID,

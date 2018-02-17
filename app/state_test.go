@@ -6,20 +6,20 @@ import (
 
 func TestState(t *testing.T) {
 	app := createMockApp()
-	ctx := app.CreateContext(nil)
+	ctx := app.createContext(nil)
 	ctx.UserID = "FOO"
-	state, err := ctx.StoreUserIDInState()
+	state, err := ctx.storeUserIDInState()
 	for _, test := range []Test{
 		{true, err == nil},
 		{14, len(state)},
-		{"FOO", ctx.GetUserIDForState(state)},
+		{"FOO", ctx.getUserIDForState(state)},
 	} {
 		test.Compare(t)
 	}
-	err = ctx.DeleteState(state)
+	err = ctx.deleteState(state)
 	for _, test := range []Test{
 		{true, err == nil},
-		{"", ctx.GetUserIDForState(state)},
+		{"", ctx.getUserIDForState(state)},
 	} {
 		test.Compare(t)
 	}

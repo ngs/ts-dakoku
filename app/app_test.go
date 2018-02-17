@@ -22,7 +22,7 @@ func createMockApp() *App {
 		os.Setenv(name, name+" is set!")
 	}
 	os.Setenv("TEAMSPIRIT_HOST", "teamspirit-1234.cloudforce.test")
-	app, _ := New()
+	app, _ := new()
 	return app
 }
 
@@ -37,7 +37,7 @@ func TestNewApp(t *testing.T) {
 	} {
 		os.Setenv(name, "")
 	}
-	app, err := New()
+	app, err := new()
 	for _, test := range []Test{
 		{false, app == nil},
 		{"SALESFORCE_CLIENT_SECRET, SALESFORCE_CLIENT_ID, SLACK_VERIFICATION_TOKEN, TEAMSPIRIT_HOST are not configured", err.Error()},
@@ -52,7 +52,7 @@ func TestNewApp(t *testing.T) {
 	} {
 		os.Setenv(name, "ok")
 	}
-	app, err = New()
+	app, err = new()
 	for _, test := range []Test{
 		{false, app == nil},
 		{true, err == nil},
@@ -63,7 +63,7 @@ func TestNewApp(t *testing.T) {
 	}
 	os.Setenv("STATE_STORE_KEY", "tsdakoku-test:states")
 	os.Setenv("OAUTH_TOKEN_STORE_KEY", "tsdakoku-test:oauth_tokens")
-	app, err = New()
+	app, err = new()
 	for _, test := range []Test{
 		{false, app == nil},
 		{true, err == nil},
@@ -74,7 +74,7 @@ func TestNewApp(t *testing.T) {
 	}
 	origiinalRedisURL := os.Getenv("REDIS_URL")
 	os.Setenv("REDIS_URL", "redis://hoge")
-	app, err = New()
+	app, err = new()
 	for _, test := range []Test{
 		{false, app == nil},
 		{0, strings.Index(err.Error(), "dial tcp: lookup hoge")},

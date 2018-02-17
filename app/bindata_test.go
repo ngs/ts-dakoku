@@ -1,6 +1,7 @@
 package app
 
 import (
+	"os"
 	"sort"
 	"testing"
 )
@@ -49,6 +50,19 @@ func TestAssetInfo(t *testing.T) {
 		{true, info.Sys() == nil},
 		{"AssetInfo assets/index2.html not found", err2.Error()},
 		{true, info2 == nil},
+	} {
+		test.Compare(t)
+	}
+}
+
+func TestRestoreAsset(t *testing.T) {
+	defer os.RemoveAll(".restored-assets")
+	os.RemoveAll(".restored-assets")
+	RestoreAssets(".restored-assets", "assets")
+	stat, _ := os.Stat(".restored-assets/assets/index.html")
+	for _, test := range []Test{
+		{"index.html", stat.Name()},
+		{int64(719), stat.Size()},
 	} {
 		test.Compare(t)
 	}

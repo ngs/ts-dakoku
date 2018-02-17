@@ -12,6 +12,7 @@ import (
 	apachelog "github.com/lestrrat/go-apache-logformat"
 )
 
+// App main appplication
 type App struct {
 	Port                   int
 	ClientSecret           string
@@ -23,7 +24,8 @@ type App struct {
 	RedisConn              redis.Conn
 }
 
-func New() (*App, error) {
+// New Returns new app
+func new() (*App, error) {
 	app := &App{}
 	clientSecret := os.Getenv("SALESFORCE_CLIENT_SECRET")
 	clientID := os.Getenv("SALESFORCE_CLIENT_ID")
@@ -62,23 +64,24 @@ func New() (*App, error) {
 	app.ClientSecret = clientSecret
 	app.SlackVerificationToken = slackVerificationToken
 	app.TeamSpiritHost = teamSpilitHost
-	if err := app.SetupRedis(); err != nil {
+	if err := app.setupRedis(); err != nil {
 		return app, err
 	}
 	return app, nil
 }
 
+// Run starts web server
 func Run() (*App, error) {
-	app, err := New()
+	app, err := new()
 	if err != nil {
 		return app, err
 	}
-	port, err := strconv.Atoi(os.Getenv("PORT"))
+	port, _ := strconv.Atoi(os.Getenv("PORT"))
 	if !(port > 0) {
 		port = 8000
 	}
 	app.Port = port
-	router := app.SetupRouter()
+	router := app.setupRouter()
 	fmt.Println("Listeninng on 0.0.0.0:" + strconv.Itoa(port))
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(port), apachelog.CombinedLog.Wrap(router, os.Stderr)))
 	return app, nil

@@ -12,36 +12,36 @@ import (
 	"gopkg.in/guregu/null.v3"
 )
 
-type TimeTable struct {
-	Items []TimeTableItem `json:"timeTable"`
+type timeTable struct {
+	Items []timeTableItem `json:"timeTable"`
 }
 
-type TimeTableItem struct {
+type timeTableItem struct {
 	From null.Int `json:"from,omitempty"`
 	To   null.Int `json:"to,omitempty"`
 	Type int      `json:"type"`
 }
 
-type TimeTableError struct {
+type timeTableError struct {
 	Message string `json:"message"`
 	Code    string `json:"errorCode"`
 }
 
-type TimeTableClient struct {
+type timeTableClient struct {
 	HTTPClient *http.Client
 	Endpoint   string
 }
 
-func ParseTimeTable(body []byte) (*TimeTable, error) {
-	var errors []TimeTableError
+func parseTimeTable(body []byte) (*timeTable, error) {
+	var errors []timeTableError
 	if err := json.Unmarshal(body, &errors); err == nil && len(errors) > 0 && errors[0].Code != "" {
 		return nil, fmt.Errorf("Error: %+v (%+v)", errors[0].Message, errors[0].Code)
 	}
-	var items []TimeTableItem
+	var items []timeTableItem
 	if err := json.Unmarshal(body, &items); err != nil {
 		return nil, err
 	}
-	return &TimeTable{Items: items}, nil
+	return &timeTable{Items: items}, nil
 }
 
 func convertTime(time time.Time) null.Int {
@@ -49,15 +49,15 @@ func convertTime(time time.Time) null.Int {
 	return null.IntFrom(int64(hour*60 + min))
 }
 
-func (item *TimeTableItem) IsAttendance() bool {
+func (item *timeTableItem) IsAttendance() bool {
 	return item.Type == 1
 }
 
-func (item *TimeTableItem) IsRest() bool {
+func (item *timeTableItem) IsRest() bool {
 	return item.Type == 21 || item.Type == 22
 }
 
-func (tt *TimeTable) IsAttending() bool {
+func (tt *timeTable) IsAttending() bool {
 	for _, item := range tt.Items {
 		if item.IsAttendance() && item.From.Valid {
 			return true
@@ -66,7 +66,7 @@ func (tt *TimeTable) IsAttending() bool {
 	return false
 }
 
-func (tt *TimeTable) IsResting() bool {
+func (tt *timeTable) IsResting() bool {
 	for _, item := range tt.Items {
 		if item.IsRest() && !item.To.Valid {
 			return true
@@ -75,7 +75,7 @@ func (tt *TimeTable) IsResting() bool {
 	return false
 }
 
-func (tt *TimeTable) IsLeaving() bool {
+func (tt *timeTable) IsLeaving() bool {
 	for _, item := range tt.Items {
 		if item.IsAttendance() && item.To.Valid {
 			return true
@@ -84,7 +84,7 @@ func (tt *TimeTable) IsLeaving() bool {
 	return false
 }
 
-func (tt *TimeTable) Attend(time time.Time) bool {
+func (tt *timeTable) Attend(time time.Time) bool {
 	items := tt.Items
 	for i, item := range items {
 		if item.IsAttendance() {
@@ -93,22 +93,22 @@ func (tt *TimeTable) Attend(time time.Time) bool {
 			return true
 		}
 	}
-	tt.Items = append(tt.Items, TimeTableItem{
+	tt.Items = append(tt.Items, timeTableItem{
 		From: convertTime(time),
 		Type: 1,
 	})
 	return true
 }
 
-func (tt *TimeTable) Rest(time time.Time) bool {
-	tt.Items = append(tt.Items, TimeTableItem{
+func (tt *timeTable) Rest(time time.Time) bool {
+	tt.Items = append(tt.Items, timeTableItem{
 		From: convertTime(time),
 		Type: 21,
 	})
 	return true
 }
 
-func (tt *TimeTable) Unrest(time time.Time) bool {
+func (tt *timeTable) Unrest(time time.Time) bool {
 	items := tt.Items
 	for i, item := range items {
 		if item.IsRest() && !item.To.Valid {
@@ -117,7 +117,7 @@ func (tt *TimeTable) Unrest(time time.Time) bool {
 			return true
 		}
 	}
-	tt.Items = append(tt.Items, TimeTableItem{
+	tt.Items = append(tt.Items, timeTableItem{
 		To:   convertTime(time),
 		Type: 21,
 	})
@@ -125,7 +125,7 @@ func (tt *TimeTable) Unrest(time time.Time) bool {
 
 }
 
-func (tt *TimeTable) Leave(time time.Time) bool {
+func (tt *timeTable) Leave(time time.Time) bool {
 	items := tt.Items
 	for i, item := range items {
 		if item.Type == 1 {
@@ -134,25 +134,25 @@ func (tt *TimeTable) Leave(time time.Time) bool {
 			return true
 		}
 	}
-	tt.Items = append(tt.Items, TimeTableItem{
+	tt.Items = append(tt.Items, timeTableItem{
 		To:   convertTime(time),
 		Type: 1,
 	})
 	return true
 }
 
-func (ctx *Context) CreateTimeTableClient() *TimeTableClient {
+func (ctx *Context) createTimeTableClient() *timeTableClient {
 	if ctx.TimeTableClient != nil {
 		return ctx.TimeTableClient
 	}
-	ctx.TimeTableClient = &TimeTableClient{
-		HTTPClient: ctx.GetOAuth2Client(),
+	ctx.TimeTableClient = &timeTableClient{
+		HTTPClient: ctx.getOAuth2Client(),
 		Endpoint:   "https://" + ctx.TeamSpiritHost + "/services/apexrest/Dakoku",
 	}
 	return ctx.TimeTableClient
 }
 
-func (client *TimeTableClient) doRequest(method string, data io.Reader) ([]byte, error) {
+func (client *timeTableClient) doRequest(method string, data io.Reader) ([]byte, error) {
 	req, err := http.NewRequest(method, client.Endpoint, data)
 	if err != nil {
 		return nil, err
@@ -167,15 +167,15 @@ func (client *TimeTableClient) doRequest(method string, data io.Reader) ([]byte,
 	return ioutil.ReadAll(res.Body)
 }
 
-func (client *TimeTableClient) GetTimeTable() (*TimeTable, error) {
+func (client *timeTableClient) GetTimeTable() (*timeTable, error) {
 	body, err := client.doRequest(http.MethodGet, nil)
 	if err != nil {
 		return nil, err
 	}
-	return ParseTimeTable(body)
+	return parseTimeTable(body)
 }
 
-func (client *TimeTableClient) UpdateTimeTable(timeTable *TimeTable) (bool, error) {
+func (client *timeTableClient) UpdateTimeTable(timeTable *timeTable) (bool, error) {
 	b, err := json.Marshal(timeTable)
 	if err != nil {
 		return false, err
@@ -187,7 +187,7 @@ func (client *TimeTableClient) UpdateTimeTable(timeTable *TimeTable) (bool, erro
 	return string(body) == "OK", nil
 }
 
-func (client *TimeTableClient) SetAttendance(attendance bool) (bool, error) {
+func (client *timeTableClient) SetAttendance(attendance bool) (bool, error) {
 	data := map[string]bool{"attendance": attendance}
 	b, err := json.Marshal(data)
 	if err != nil {

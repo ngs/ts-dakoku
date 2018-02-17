@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func RandomString(len int) string {
+func randomString(len int) string {
 	var n uint64
 	binary.Read(rand.Reader, binary.LittleEndian, &n)
 	return strconv.FormatUint(n, len)

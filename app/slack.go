@@ -11,13 +11,13 @@ import (
 )
 
 const (
-	ActionTypeAttend = "attend"
-	ActionTypeRest   = "rest"
-	ActionTypeUnrest = "unrest"
-	ActionTypeLeave  = "leave"
+	actionTypeAttend = "attend"
+	actionTypeRest   = "rest"
+	actionTypeUnrest = "unrest"
+	actionTypeLeave  = "leave"
 )
 
-func (ctx *Context) GetActionCallback() (*slack.Msg, error) {
+func (ctx *Context) getActionCallback() (*slack.Msg, error) {
 	r := ctx.Request
 	if err := r.ParseForm(); err != nil {
 		return nil, err
@@ -35,32 +35,32 @@ func (ctx *Context) GetActionCallback() (*slack.Msg, error) {
 
 	ctx.UserID = data.User.ID
 
-	client := ctx.CreateTimeTableClient()
+	client := ctx.createTimeTableClient()
 	timeTable, err := client.GetTimeTable()
 	if err != nil {
-		return ctx.GetLoginSlackMessage()
+		return ctx.getLoginSlackMessage()
 	}
 
 	text := ""
 	now := time.Now()
 	attendance := -1
 	switch data.Actions[0].Name {
-	case ActionTypeLeave:
+	case actionTypeLeave:
 		{
 			attendance = 0
 			text = "退社しました :house:"
 		}
-	case ActionTypeRest:
+	case actionTypeRest:
 		{
 			timeTable.Rest(now)
 			text = "休憩を開始しました :coffee:"
 		}
-	case ActionTypeUnrest:
+	case actionTypeUnrest:
 		{
 			timeTable.Unrest(now)
 			text = "休憩を終了しました :computer:"
 		}
-	case ActionTypeAttend:
+	case actionTypeAttend:
 		{
 			attendance = 1
 			text = "出社しました :office:"
@@ -93,8 +93,8 @@ func (ctx *Context) GetActionCallback() (*slack.Msg, error) {
 	return params, nil
 }
 
-func (ctx *Context) GetLoginSlackMessage() (*slack.Msg, error) {
-	state, err := ctx.StoreUserIDInState()
+func (ctx *Context) getLoginSlackMessage() (*slack.Msg, error) {
+	state, err := ctx.storeUserIDInState()
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (ctx *Context) GetLoginSlackMessage() (*slack.Msg, error) {
 						Text:  "認証する",
 						Style: "primary",
 						Type:  "button",
-						URL:   ctx.GetAuthenticateURL(state),
+						URL:   ctx.getAuthenticateURL(state),
 					},
 				},
 			},
@@ -118,14 +118,14 @@ func (ctx *Context) GetLoginSlackMessage() (*slack.Msg, error) {
 	}, nil
 }
 
-func (ctx *Context) GetSlackMessage(text string) (*slack.Msg, error) {
-	client := ctx.CreateTimeTableClient()
+func (ctx *Context) getSlackMessage(text string) (*slack.Msg, error) {
+	client := ctx.createTimeTableClient()
 	if client.HTTPClient == nil || text == "login" {
-		return ctx.GetLoginSlackMessage()
+		return ctx.getLoginSlackMessage()
 	}
 	timeTable, err := client.GetTimeTable()
 	if err != nil {
-		return ctx.GetLoginSlackMessage()
+		return ctx.getLoginSlackMessage()
 	}
 	if timeTable.IsLeaving() {
 		return &slack.Msg{
@@ -139,8 +139,8 @@ func (ctx *Context) GetSlackMessage(text string) (*slack.Msg, error) {
 					CallbackID: "attendance_button",
 					Actions: []slack.AttachmentAction{
 						slack.AttachmentAction{
-							Name:  ActionTypeUnrest,
-							Value: ActionTypeUnrest,
+							Name:  actionTypeUnrest,
+							Value: actionTypeUnrest,
 							Text:  "休憩を終了する",
 							Style: "default",
 							Type:  "button",
@@ -157,15 +157,15 @@ func (ctx *Context) GetSlackMessage(text string) (*slack.Msg, error) {
 					CallbackID: "attendance_button",
 					Actions: []slack.AttachmentAction{
 						slack.AttachmentAction{
-							Name:  ActionTypeRest,
-							Value: ActionTypeRest,
+							Name:  actionTypeRest,
+							Value: actionTypeRest,
 							Text:  "休憩を開始する",
 							Style: "default",
 							Type:  "button",
 						},
 						slack.AttachmentAction{
-							Name:  ActionTypeLeave,
-							Value: ActionTypeLeave,
+							Name:  actionTypeLeave,
+							Value: actionTypeLeave,
 							Text:  "退社する",
 							Style: "danger",
 							Type:  "button",
@@ -186,8 +186,8 @@ func (ctx *Context) GetSlackMessage(text string) (*slack.Msg, error) {
 				CallbackID: "attendance_button",
 				Actions: []slack.AttachmentAction{
 					slack.AttachmentAction{
-						Name:  ActionTypeAttend,
-						Value: ActionTypeAttend,
+						Name:  actionTypeAttend,
+						Value: actionTypeAttend,
 						Text:  "出社する",
 						Style: "primary",
 						Type:  "button",

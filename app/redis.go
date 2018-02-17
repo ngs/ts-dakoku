@@ -7,17 +7,17 @@ import (
 	"github.com/garyburd/redigo/redis"
 )
 
-func (app *App) ReconnectRedisIfNeeeded() {
+func (app *App) reconnectRedisIfNeeeded() {
 	res, _ := app.RedisConn.Do("PING")
 	if pong, ok := res.([]byte); !ok || string(pong) != "PONG" {
-		err := app.SetupRedis()
+		err := app.setupRedis()
 		if err != nil {
 			panic(err)
 		}
 	}
 }
 
-func (app *App) SetupRedis() error {
+func (app *App) setupRedis() error {
 	connectTimeout := 1 * time.Second
 	readTimeout := 1 * time.Second
 	writeTimeout := 1 * time.Second
@@ -32,15 +32,14 @@ func (app *App) SetupRedis() error {
 		}
 		app.RedisConn = conn
 		return nil
-	} else {
-		conn, err := redis.Dial("tcp", ":6379",
-			redis.DialConnectTimeout(connectTimeout),
-			redis.DialReadTimeout(readTimeout),
-			redis.DialWriteTimeout(writeTimeout))
-		if err != nil {
-			return err
-		}
-		app.RedisConn = conn
-		return nil
 	}
+	conn, err := redis.Dial("tcp", ":6379",
+		redis.DialConnectTimeout(connectTimeout),
+		redis.DialReadTimeout(readTimeout),
+		redis.DialWriteTimeout(writeTimeout))
+	if err != nil {
+		return err
+	}
+	app.RedisConn = conn
+	return nil
 }

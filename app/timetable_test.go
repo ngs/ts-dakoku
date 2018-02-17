@@ -32,8 +32,8 @@ func (test Test) DeepEqual(t *testing.T) {
 }
 
 func TestMarshalTimeTable(t *testing.T) {
-	b, _ := json.Marshal(TimeTable{
-		Items: []TimeTableItem{
+	b, _ := json.Marshal(timeTable{
+		Items: []timeTableItem{
 			{From: null.IntFrom(1), To: null.IntFrom(2), Type: 3},
 			{From: null.IntFrom(4), Type: 1},
 		},
@@ -42,7 +42,7 @@ func TestMarshalTimeTable(t *testing.T) {
 }
 
 func TestParseTimeTable(t *testing.T) {
-	timeTable, err := ParseTimeTable([]byte(`[{"from":600, "to": null, "type": 1}, {"from":780, "to": 840, "type": 21}]`))
+	timeTable, err := parseTimeTable([]byte(`[{"from":600, "to": null, "type": 1}, {"from":780, "to": 840, "type": 21}]`))
 	for _, test := range []Test{
 		{nil, err},
 		{2, len(timeTable.Items)},
@@ -57,8 +57,8 @@ func TestParseTimeTable(t *testing.T) {
 	}
 }
 
-func TestParseTimeTableError(t *testing.T) {
-	timeTable, err := ParseTimeTable([]byte(`[{"message":"Session expired or invalid","errorCode":"INVALID_SESSION_ID"}]`))
+func TestParsetimeTableError(t *testing.T) {
+	timeTable, err := parseTimeTable([]byte(`[{"message":"Session expired or invalid","errorCode":"INVALID_SESSION_ID"}]`))
 	for _, test := range []Test{
 		{"Error: Session expired or invalid (INVALID_SESSION_ID)", err.Error()},
 		{true, timeTable == nil},
@@ -68,8 +68,8 @@ func TestParseTimeTableError(t *testing.T) {
 }
 
 func TestIsAttending(t *testing.T) {
-	tt := TimeTable{
-		Items: []TimeTableItem{
+	tt := timeTable{
+		Items: []timeTableItem{
 			{From: null.IntFrom(1), To: null.IntFrom(2), Type: 21},
 			{From: null.IntFrom(1), To: null.IntFrom(2), Type: 21},
 			{From: null.IntFrom(1), To: null.IntFrom(2), Type: 1},
@@ -81,8 +81,8 @@ func TestIsAttending(t *testing.T) {
 }
 
 func TestIsResting(t *testing.T) {
-	tt := TimeTable{
-		Items: []TimeTableItem{
+	tt := timeTable{
+		Items: []timeTableItem{
 			{From: null.IntFrom(1), To: null.IntFrom(2), Type: 1},
 			{From: null.IntFrom(1), To: null.IntFrom(2), Type: 21},
 			{From: null.IntFrom(1), Type: 21},
@@ -94,8 +94,8 @@ func TestIsResting(t *testing.T) {
 }
 
 func TestIsLeaving(t *testing.T) {
-	tt := TimeTable{
-		Items: []TimeTableItem{
+	tt := timeTable{
+		Items: []timeTableItem{
 			{From: null.IntFrom(1), To: null.IntFrom(2), Type: 21},
 			{From: null.IntFrom(1), To: null.IntFrom(2), Type: 21},
 			{From: null.IntFrom(1), Type: 1},
@@ -107,8 +107,8 @@ func TestIsLeaving(t *testing.T) {
 }
 
 func TestAttend(t *testing.T) {
-	tt := TimeTable{
-		Items: []TimeTableItem{
+	tt := timeTable{
+		Items: []timeTableItem{
 			{From: null.IntFrom(1), To: null.IntFrom(2), Type: 21},
 			{From: null.IntFrom(1), To: null.IntFrom(2), Type: 21},
 		},
@@ -126,8 +126,8 @@ func TestAttend(t *testing.T) {
 }
 
 func TestAttend2(t *testing.T) {
-	tt := TimeTable{
-		Items: []TimeTableItem{
+	tt := timeTable{
+		Items: []timeTableItem{
 			{To: null.IntFrom(1140), Type: 1},
 			{From: null.IntFrom(1), To: null.IntFrom(2), Type: 21},
 			{From: null.IntFrom(1), To: null.IntFrom(2), Type: 21},
@@ -146,8 +146,8 @@ func TestAttend2(t *testing.T) {
 }
 
 func TestRest(t *testing.T) {
-	tt := TimeTable{
-		Items: []TimeTableItem{
+	tt := timeTable{
+		Items: []timeTableItem{
 			{From: null.IntFrom(1), To: null.IntFrom(2), Type: 21},
 			{From: null.IntFrom(1), Type: 21},
 		},
@@ -165,8 +165,8 @@ func TestRest(t *testing.T) {
 }
 
 func TestUnrest(t *testing.T) {
-	tt := TimeTable{
-		Items: []TimeTableItem{
+	tt := timeTable{
+		Items: []timeTableItem{
 			{From: null.IntFrom(1), To: null.IntFrom(2), Type: 21},
 			{From: null.IntFrom(1), Type: 21},
 		},
@@ -184,8 +184,8 @@ func TestUnrest(t *testing.T) {
 }
 
 func TestLeave(t *testing.T) {
-	tt := TimeTable{
-		Items: []TimeTableItem{
+	tt := timeTable{
+		Items: []timeTableItem{
 			{From: null.IntFrom(1), To: null.IntFrom(2), Type: 21},
 			{From: null.IntFrom(1), Type: 21},
 		},
@@ -204,8 +204,8 @@ func TestLeave(t *testing.T) {
 }
 
 func TestLeave2(t *testing.T) {
-	tt := TimeTable{
-		Items: []TimeTableItem{
+	tt := timeTable{
+		Items: []timeTableItem{
 			{From: null.IntFrom(1), To: null.IntFrom(2), Type: 21},
 			{From: null.IntFrom(1), Type: 21},
 			{From: null.IntFrom(600), Type: 1},
