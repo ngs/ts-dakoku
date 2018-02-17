@@ -15,9 +15,9 @@ import (
 	gock "gopkg.in/h2non/gock.v1"
 )
 
-func createActionCallbackRequest(actionName string, token string) *http.Request {
+func createActionCallbackRequest(actionType string, token string) *http.Request {
 	callback := &slack.AttachmentActionCallback{
-		Actions:     []slack.AttachmentAction{{Name: actionName}},
+		Actions:     []slack.AttachmentAction{{Name: actionType}},
 		Token:       token,
 		ResponseURL: "https://hooks.slack.test/coolhook",
 		User: slack.User{
@@ -50,43 +50,40 @@ func setupActionCallbackGocks(actionType string, responseText string) {
 		Get("/services/apexrest/Dakoku").
 		Reply(200).
 		JSON([]map[string]interface{}{{"from": 1, "to": 2, "type": 1}})
-
-	gock.New("https://hooks.slack.test").
-		Post("/coolhook").
-		Reply(200).
-		JSON([]map[string]interface{}{{"ok": true}})
 }
 
 func testGetActionCallbackWithActionType(t *testing.T, actionType string, successMessage string) {
 	defer gock.Off()
 	app := createMockApp()
 	app.CleanRedis()
-	ctx := app.createContext(createActionCallbackRequest(actionType, "hoge"))
-	msg, err := ctx.getActionCallback()
-	for _, test := range []Test{
-		{"Invalid token", err.Error()},
-		{true, msg == nil},
-	} {
-		test.Compare(t)
-	}
-
-	ctx = app.createContext(createActionCallbackRequest(actionType, app.SlackVerificationToken))
+	req, _ := http.NewRequest(http.MethodPost, "https://example.com/hooks/interactive", strings.NewReader(""))
+	ctx := app.createContext(req)
 	ctx.UserID = "FOO"
 	ctx.setAccessToken(&oauth2.Token{
 		AccessToken:  "foo",
 		RefreshToken: "bar",
 		TokenType:    "Bearer",
 	})
-	gock.InterceptClient(ctx.createTimeTableClient().HTTPClient)
 
-	gock.New("https://" + app.TeamSpiritHost).
+	gock.New("https://teamspirit-1234.cloudforce.test").
 		Get("/services/apexrest/Dakoku").
 		Reply(200).
 		JSON([]map[string]interface{}{{"message": "Session expired or invalid", "errorCode": "INVALID_SESSION_ID"}})
 
-	msg, err = ctx.getActionCallback()
+	gock.InterceptClient(ctx.createTimeTableClient().HTTPClient)
+
+	msg, responseURL, err := ctx.getActionCallback(&slack.AttachmentActionCallback{
+		Actions:     []slack.AttachmentAction{{Name: actionType}},
+		Token:       app.SlackVerificationToken,
+		ResponseURL: "https://hooks.slack.test/coolhook",
+		User: slack.User{
+			ID: "FOO",
+		},
+	})
+
 	for _, test := range []Test{
 		{true, err == nil},
+		{"https://hooks.slack.test/coolhook", responseURL},
 		{"TeamSpirit で認証を行って、再度 `/ts` コマンドを実行してください :bow:", msg.Attachments[0].Text},
 		{0, strings.Index(msg.Attachments[0].Actions[0].URL, "https://example.com/oauth/authenticate/")},
 		{true, gock.IsDone()},
@@ -95,9 +92,18 @@ func testGetActionCallbackWithActionType(t *testing.T, actionType string, succes
 	}
 
 	setupActionCallbackGocks(actionType, "OK")
-	msg, err = ctx.getActionCallback()
+	msg, responseURL, err = ctx.getActionCallback(&slack.AttachmentActionCallback{
+		Actions:     []slack.AttachmentAction{{Name: actionType}},
+		Token:       app.SlackVerificationToken,
+		ResponseURL: "https://hooks.slack.test/coolhook",
+		User: slack.User{
+			ID: "FOO",
+		},
+	})
+
 	for _, test := range []Test{
 		{true, err == nil},
+		{"https://hooks.slack.test/coolhook", responseURL},
 		{successMessage, msg.Text},
 		{"in_channel", msg.ResponseType},
 		{true, msg.ReplaceOriginal},
@@ -108,9 +114,18 @@ func testGetActionCallbackWithActionType(t *testing.T, actionType string, succes
 
 	setupActionCallbackGocks(actionType, "NG")
 
-	msg, err = ctx.getActionCallback()
+	msg, responseURL, err = ctx.getActionCallback(&slack.AttachmentActionCallback{
+		Actions:     []slack.AttachmentAction{{Name: actionType}},
+		Token:       app.SlackVerificationToken,
+		ResponseURL: "https://hooks.slack.test/coolhook",
+		User: slack.User{
+			ID: "FOO",
+		},
+	})
+
 	for _, test := range []Test{
 		{true, err == nil},
+		{"https://hooks.slack.test/coolhook", responseURL},
 		{"勤務表の更新に失敗しました :warning:", msg.Text},
 		{"ephemeral", msg.ResponseType},
 		{false, msg.ReplaceOriginal},

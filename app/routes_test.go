@@ -34,6 +34,20 @@ func TestSetupRouter(t *testing.T) {
 	}, paths}.DeepEqual(t)
 }
 
+func TestHandleAsset(t *testing.T) {
+	app := createMockApp()
+	res := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "https://example.com/foo", nil)
+	app.handleAsset("hoge", res, req)
+	for _, test := range []Test{
+		{404, res.Code},
+		{0, strings.Index(res.Body.String(), "Asset assets/hoge not found")},
+		{"text/plain; charset=utf-8", res.Header().Get("Content-Type")},
+	} {
+		test.Compare(t)
+	}
+}
+
 func TestHandleIndex(t *testing.T) {
 	app := createMockApp()
 	res := httptest.NewRecorder()
@@ -176,6 +190,7 @@ func createSlashCommandRequest(data url.Values) *http.Request {
 }
 
 func TestHandleSlashCommand(t *testing.T) {
+	defer gock.Off()
 	app := createMockApp()
 	app.CleanRedis()
 	res := httptest.NewRecorder()
@@ -190,9 +205,12 @@ func TestHandleSlashCommand(t *testing.T) {
 		"token": {app.SlackVerificationToken},
 	})
 	app.setupRouter().ServeHTTP(res, req)
+	time.Sleep(time.Second)
 	for _, test := range []Test{
 		{200, res.Code},
-		{48, strings.Index(res.Body.String(), `"callback_id":"authentication_button"`)},
+		{"", res.Body.String()},
+		{"text/plain", res.Header().Get("Content-Type")},
+		{true, gock.IsDone()},
 	} {
 		test.Compare(t)
 	}
@@ -202,15 +220,45 @@ func TestHandleActionCallback(t *testing.T) {
 	defer gock.Off()
 	app := createMockApp()
 	app.CleanRedis()
+
 	res := httptest.NewRecorder()
 	req := createActionCallbackRequest(actionTypeAttend, "foo")
 	app.setupRouter().ServeHTTP(res, req)
-	Test{401, res.Code}.Compare(t)
+	for _, test := range []Test{
+		{401, res.Code},
+		{"Invlaid token", strings.Trim(res.Body.String(), "\n\t\r")},
+		{true, gock.IsDone()},
+	} {
+		test.Compare(t)
+	}
+
+	res = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodPost, "https://example.com/hooks/interactive", strings.NewReader("payload=[]"))
+	app.setupRouter().ServeHTTP(res, req)
+	time.Sleep(time.Second)
+	for _, test := range []Test{
+		{400, res.Code},
+		{"unexpected end of JSON input", strings.Trim(res.Body.String(), "\n\t\r")},
+		{true, gock.IsDone()},
+	} {
+		test.Compare(t)
+	}
+
+	gock.New("https://hooks.slack.test").
+		Post("/coolhook").
+		Reply(200).
+		JSON([]map[string]interface{}{{"success": true}})
 
 	gock.New("https://teamspirit-1234.cloudforce.test").
 		Get("/services/apexrest/Dakoku").
 		Reply(200).
 		JSON([]map[string]interface{}{{"from": 1, "to": 2, "type": 1}})
+
+	gock.New("https://teamspirit-1234.cloudforce.test").
+		Put("/services/apexrest/Dakoku").
+		Reply(200).
+		BodyString("OK")
+
 	app.CleanRedis()
 	res = httptest.NewRecorder()
 	req = createActionCallbackRequest(actionTypeAttend, app.SlackVerificationToken)
@@ -223,9 +271,11 @@ func TestHandleActionCallback(t *testing.T) {
 	})
 
 	app.setupRouter().ServeHTTP(res, req)
+	time.Sleep(time.Second)
 	for _, test := range []Test{
 		{200, res.Code},
-		{`{"text":"勤務表の更新に失敗しました :warning:","pinned_to":null,"response_type":"ephemeral"}`, res.Body.String()},
+		{"勤務表を更新中", res.Body.String()},
+		{true, gock.IsDone()},
 	} {
 		test.Compare(t)
 	}

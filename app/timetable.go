@@ -164,7 +164,8 @@ func (client *timeTableClient) doRequest(method string, data io.Reader) ([]byte,
 	if err != nil {
 		return nil, err
 	}
-	return ioutil.ReadAll(res.Body)
+	body, err := ioutil.ReadAll(res.Body)
+	return body, err
 }
 
 func (client *timeTableClient) GetTimeTable() (*timeTable, error) {
