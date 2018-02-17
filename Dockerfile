@@ -1,7 +1,7 @@
 FROM golang:1.9.4-alpine3.7
 MAINTAINER Atsushi Nagase<a@ngs.io>
 
-ADD . /go/src/github.com/ngs/ts-dakoku
+COPY . /go/src/github.com/ngs/ts-dakoku
 RUN go install github.com/ngs/ts-dakoku
 
 ENTRYPOINT ["/go/bin/ts-dakoku"]
