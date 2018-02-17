@@ -15,8 +15,23 @@ jobs:
           path: coverage
           destination: coverage
 
+  deploy:
+    docker:
+      - image: circleci/golang:1.9.4
+    working_directory: /go/src/github.com/ngs/ts-dakoku
+    steps:
+      - checkout
+      - run: git push heroku master
+
 workflows:
   version: 2
   test:
     jobs:
       - test
+      - deploy:
+          filters:
+            branches:
+              only: [master, deploy]
+          requires:
+            - test
+
