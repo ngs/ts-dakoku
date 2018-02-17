@@ -10,7 +10,9 @@ jobs:
       - checkout
       - run: make test
       - run: go get github.com/mattn/goveralls
+      - run: go get github.com/schrej/godacov
       - run: goveralls -coverprofile=coverage/cover.out -service=circle-ci
+      - run: godacov -t $CODACY_PROJECT_TOKEN -r ./coverage/cover.out -c $CIRCLE_SHA1
       - store_artifacts:
           path: coverage
           destination: coverage
