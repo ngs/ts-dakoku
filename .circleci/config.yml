@@ -17,10 +17,14 @@ jobs:
 
   deploy:
     docker:
-      - image: circleci/golang:1.9.4
+      - image: atsnngs/alpine-heroku-cli:latest
     working_directory: /go/src/github.com/ngs/ts-dakoku
     steps:
       - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - '4d:74:c3:f5:28:7d:ed:db:aa:b8:6c:7d:15:98:8a:5b'
+      - run: /bin/sh /setup.sh
       - run: git push heroku master
 
 workflows:
@@ -34,4 +38,3 @@ workflows:
               only: [master, deploy]
           requires:
             - test
-
