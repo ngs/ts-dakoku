@@ -1,10 +1,6 @@
 package app
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
-	"net/http"
 	"time"
 
 	"github.com/nlopes/slack"
@@ -17,28 +13,13 @@ const (
 	actionTypeLeave  = "leave"
 )
 
-func (ctx *Context) getActionCallback() (*slack.Msg, error) {
-	r := ctx.Request
-	if err := r.ParseForm(); err != nil {
-		return nil, err
-	}
-	payload := r.PostForm.Get("payload")
-
-	var data slack.AttachmentActionCallback
-	if err := json.Unmarshal([]byte(payload), &data); err != nil {
-		return nil, err
-	}
-
-	if data.Token != ctx.SlackVerificationToken {
-		return nil, errors.New("Invalid token")
-	}
-
+func (ctx *Context) getActionCallback(data *slack.AttachmentActionCallback) (*slack.Msg, string, error) {
 	ctx.UserID = data.User.ID
-
 	client := ctx.createTimeTableClient()
 	timeTable, err := client.GetTimeTable()
 	if err != nil {
-		return ctx.getLoginSlackMessage()
+		err, msg := ctx.getLoginSlackMessage()
+		return err, data.ResponseURL, msg
 	}
 
 	text := ""
@@ -85,12 +66,7 @@ func (ctx *Context) getActionCallback() (*slack.Msg, error) {
 		params.Text = "勤務表の更新に失敗しました :warning:"
 	}
 
-	b, err := json.Marshal(params)
-	if err != nil {
-		return nil, err
-	}
-	http.Post(data.ResponseURL, "application/json", bytes.NewBuffer(b))
-	return params, nil
+	return params, data.ResponseURL, nil
 }
 
 func (ctx *Context) getLoginSlackMessage() (*slack.Msg, error) {

@@ -1,7 +1,9 @@
 package app
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"golang.org/x/oauth2"
@@ -37,7 +39,7 @@ func (app *App) handleFavicon(w http.ResponseWriter, r *http.Request) {
 func (app *App) handleAsset(filename string, w http.ResponseWriter, r *http.Request) {
 	data, err := Asset("assets/" + filename)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusNotFound)
 	} else {
 		w.Write(data)
 	}
@@ -91,36 +93,43 @@ func (app *App) handleSlashCommand(w http.ResponseWriter, r *http.Request) {
 	ctx := app.createContext(r)
 	ctx.UserID = s.UserID
 
-	params, err := ctx.getSlackMessage(s.Text)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	go func() {
+		params, _ := ctx.getSlackMessage(s.Text)
+		b, _ := json.Marshal(params)
+		http.Post(s.ResponseURL, "application/json", bytes.NewBuffer(b))
+	}()
 
-	b, err := json.Marshal(params)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(b)
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte(""))
 }
 
 func (app *App) handleActionCallback(w http.ResponseWriter, r *http.Request) {
 	app.reconnectRedisIfNeeeded()
 	ctx := app.createContext(r)
-	params, err := ctx.getActionCallback()
+	r.ParseForm()
+	payload := r.PostForm.Get("payload")
 
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
+	var data slack.AttachmentActionCallback
+	if err := json.Unmarshal([]byte(payload), &data); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	b, err := json.Marshal(params)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if data.Token != ctx.SlackVerificationToken {
+		http.Error(w, "Invlaid token", http.StatusUnauthorized)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(b)
+	go func() {
+		params, responseURL, err := ctx.getActionCallback(&data)
+		if err != nil && params == nil && responseURL != "" {
+			http.Post(responseURL, "text/plain", bytes.NewBufferString(err.Error()))
+			return
+		} else if err != nil {
+			fmt.Printf("Handle Action Callback Error: %+v\n", err.Error())
+		}
+		b, _ := json.Marshal(params)
+		http.Post(responseURL, "application/json", bytes.NewBuffer(b))
+	}()
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte("勤務表を更新中"))
 }
