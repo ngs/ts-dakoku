@@ -10,15 +10,15 @@ import (
 func TestGetOAuthCallbackURL(t *testing.T) {
 	app := createMockApp()
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/test", nil)
-	ctx := app.CreateContext(req)
-	Test{"https://example.com/oauth/callback", ctx.GetOAuthCallbackURL()}.Compare(t)
+	ctx := app.createContext(req)
+	Test{"https://example.com/oauth/callback", ctx.getOAuthCallbackURL()}.Compare(t)
 }
 
 func TestGetAuthenticateURL(t *testing.T) {
 	app := createMockApp()
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/test", nil)
-	ctx := app.CreateContext(req)
-	Test{"https://example.com/oauth/authenticate/foo", ctx.GetAuthenticateURL("foo")}.Compare(t)
+	ctx := app.createContext(req)
+	Test{"https://example.com/oauth/authenticate/foo", ctx.getAuthenticateURL("foo")}.Compare(t)
 }
 
 func TestSetAndGetAccessToken(t *testing.T) {
@@ -30,11 +30,11 @@ func TestSetAndGetAccessToken(t *testing.T) {
 	app := createMockApp()
 	app.CleanRedis()
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/test", nil)
-	ctx := app.CreateContext(req)
+	ctx := app.createContext(req)
 	ctx.UserID = "FOO"
-	err := ctx.SetAccessToken(token)
+	err := ctx.setAccessToken(token)
 	Test{false, err != nil}.Compare(t)
-	token = ctx.GetAccessTokenForUser()
+	token = ctx.getAccessTokenForUser()
 	for _, test := range []Test{
 		{"foo", token.AccessToken},
 		{"bar", token.RefreshToken},
@@ -42,8 +42,8 @@ func TestSetAndGetAccessToken(t *testing.T) {
 	} {
 		test.Compare(t)
 	}
-	ctx = app.CreateContext(req)
+	ctx = app.createContext(req)
 	ctx.UserID = "BAR"
-	token = ctx.GetAccessTokenForUser()
+	token = ctx.getAccessTokenForUser()
 	Test{true, token == nil}.Compare(t)
 }

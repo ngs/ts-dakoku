@@ -20,6 +20,9 @@ func createActionCallbackRequest(actionName string, token string) *http.Request 
 		Actions:     []slack.AttachmentAction{{Name: actionName}},
 		Token:       token,
 		ResponseURL: "https://hooks.slack.test/coolhook",
+		User: slack.User{
+			ID: "FOO",
+		},
 	}
 	json, _ := json.Marshal(callback)
 	data := url.Values{}
@@ -31,7 +34,7 @@ func createActionCallbackRequest(actionName string, token string) *http.Request 
 }
 
 func setupActionCallbackGocks(actionType string, responseText string) {
-	if actionType == ActionTypeAttend || actionType == ActionTypeLeave {
+	if actionType == actionTypeAttend || actionType == actionTypeLeave {
 		gock.New("https://teamspirit-1234.cloudforce.test").
 			Put("/services/apexrest/Dakoku").
 			Reply(200).
@@ -58,8 +61,8 @@ func testGetActionCallbackWithActionType(t *testing.T, actionType string, succes
 	defer gock.Off()
 	app := createMockApp()
 	app.CleanRedis()
-	ctx := app.CreateContext(createActionCallbackRequest(actionType, "hoge"))
-	msg, err := ctx.GetActionCallback()
+	ctx := app.createContext(createActionCallbackRequest(actionType, "hoge"))
+	msg, err := ctx.getActionCallback()
 	for _, test := range []Test{
 		{"Invalid token", err.Error()},
 		{true, msg == nil},
@@ -67,21 +70,21 @@ func testGetActionCallbackWithActionType(t *testing.T, actionType string, succes
 		test.Compare(t)
 	}
 
-	ctx = app.CreateContext(createActionCallbackRequest(actionType, app.SlackVerificationToken))
+	ctx = app.createContext(createActionCallbackRequest(actionType, app.SlackVerificationToken))
 	ctx.UserID = "FOO"
-	ctx.SetAccessToken(&oauth2.Token{
+	ctx.setAccessToken(&oauth2.Token{
 		AccessToken:  "foo",
 		RefreshToken: "bar",
 		TokenType:    "Bearer",
 	})
-	gock.InterceptClient(ctx.CreateTimeTableClient().HTTPClient)
+	gock.InterceptClient(ctx.createTimeTableClient().HTTPClient)
 
 	gock.New("https://" + app.TeamSpiritHost).
 		Get("/services/apexrest/Dakoku").
 		Reply(200).
 		JSON([]map[string]interface{}{{"message": "Session expired or invalid", "errorCode": "INVALID_SESSION_ID"}})
 
-	msg, err = ctx.GetActionCallback()
+	msg, err = ctx.getActionCallback()
 	for _, test := range []Test{
 		{true, err == nil},
 		{"TeamSpirit で認証を行って、再度 `/ts` コマンドを実行してください :bow:", msg.Attachments[0].Text},
@@ -92,7 +95,7 @@ func testGetActionCallbackWithActionType(t *testing.T, actionType string, succes
 	}
 
 	setupActionCallbackGocks(actionType, "OK")
-	msg, err = ctx.GetActionCallback()
+	msg, err = ctx.getActionCallback()
 	for _, test := range []Test{
 		{true, err == nil},
 		{successMessage, msg.Text},
@@ -105,7 +108,7 @@ func testGetActionCallbackWithActionType(t *testing.T, actionType string, succes
 
 	setupActionCallbackGocks(actionType, "NG")
 
-	msg, err = ctx.GetActionCallback()
+	msg, err = ctx.getActionCallback()
 	for _, test := range []Test{
 		{true, err == nil},
 		{"勤務表の更新に失敗しました :warning:", msg.Text},
@@ -118,13 +121,13 @@ func testGetActionCallbackWithActionType(t *testing.T, actionType string, succes
 }
 
 func TestGetActionCallback(t *testing.T) {
-	testGetActionCallbackWithActionType(t, ActionTypeAttend, "出社しました :office:")
-	testGetActionCallbackWithActionType(t, ActionTypeLeave, "退社しました :house:")
-	testGetActionCallbackWithActionType(t, ActionTypeRest, "休憩を開始しました :coffee:")
-	testGetActionCallbackWithActionType(t, ActionTypeUnrest, "休憩を終了しました :computer:")
+	testGetActionCallbackWithActionType(t, actionTypeAttend, "出社しました :office:")
+	testGetActionCallbackWithActionType(t, actionTypeLeave, "退社しました :house:")
+	testGetActionCallbackWithActionType(t, actionTypeRest, "休憩を開始しました :coffee:")
+	testGetActionCallbackWithActionType(t, actionTypeUnrest, "休憩を終了しました :computer:")
 }
 
-func setupTimeTableGocks(items []TimeTableItem) {
+func setupTimeTableGocks(items []timeTableItem) {
 	gock.New("https://teamspirit-1234.cloudforce.test").
 		Get("/services/apexrest/Dakoku").
 		Reply(200).
@@ -135,9 +138,9 @@ func TestGetSlackMessage(t *testing.T) {
 	defer gock.Off()
 	app := createMockApp()
 	req, _ := http.NewRequest(http.MethodPost, "https://example.com/hooks/slash", bytes.NewBufferString(""))
-	ctx := app.CreateContext(req)
+	ctx := app.createContext(req)
 	ctx.UserID = "BAZ"
-	msg, err := ctx.GetSlackMessage("")
+	msg, err := ctx.getSlackMessage("")
 	for _, test := range []Test{
 		{true, err == nil},
 		{"TeamSpirit で認証を行って、再度 `/ts` コマンドを実行してください :bow:", msg.Attachments[0].Text},
@@ -145,13 +148,13 @@ func TestGetSlackMessage(t *testing.T) {
 	} {
 		test.Compare(t)
 	}
-	ctx.SetAccessToken(&oauth2.Token{
+	ctx.setAccessToken(&oauth2.Token{
 		AccessToken:  "foo",
 		RefreshToken: "bar",
 		TokenType:    "Bearer",
 	})
 	ctx.TimeTableClient = nil
-	msg, err = ctx.GetSlackMessage("")
+	msg, err = ctx.getSlackMessage("")
 	for _, test := range []Test{
 		{true, err == nil},
 		{"TeamSpirit で認証を行って、再度 `/ts` コマンドを実行してください :bow:", msg.Attachments[0].Text},
@@ -159,11 +162,11 @@ func TestGetSlackMessage(t *testing.T) {
 	} {
 		test.Compare(t)
 	}
-	setupTimeTableGocks([]TimeTableItem{
+	setupTimeTableGocks([]timeTableItem{
 		{null.IntFrom(10 * 60), null.IntFrom(19 * 60), 1},
 	})
 	ctx.TimeTableClient = nil
-	msg, err = ctx.GetSlackMessage("")
+	msg, err = ctx.getSlackMessage("")
 	for _, test := range []Test{
 		{true, err == nil},
 		{"既に退社済です。打刻修正は <https://teamspirit-1234.cloudforce.test|TeamSpirit> で行なってください。", msg.Text},
@@ -171,60 +174,60 @@ func TestGetSlackMessage(t *testing.T) {
 	} {
 		test.Compare(t)
 	}
-	setupTimeTableGocks([]TimeTableItem{
+	setupTimeTableGocks([]timeTableItem{
 		{null.IntFrom(10 * 60), null.IntFromPtr(nil), 1},
 		{null.IntFrom(10 * 60), null.IntFromPtr(nil), 21},
 	})
 	ctx.TimeTableClient = nil
-	msg, err = ctx.GetSlackMessage("")
+	msg, err = ctx.getSlackMessage("")
 	for _, test := range []Test{
 		{true, err == nil},
 		{"休憩を終了する", msg.Attachments[0].Actions[0].Text},
-		{ActionTypeUnrest, msg.Attachments[0].Actions[0].Name},
+		{actionTypeUnrest, msg.Attachments[0].Actions[0].Name},
 		{true, gock.IsDone()},
 	} {
 		test.Compare(t)
 	}
-	setupTimeTableGocks([]TimeTableItem{
+	setupTimeTableGocks([]timeTableItem{
 		{null.IntFrom(10 * 60), null.IntFromPtr(nil), 1},
 		{null.IntFrom(10 * 60), null.IntFromPtr(nil), 21},
 	})
 	ctx.TimeTableClient = nil
-	msg, err = ctx.GetSlackMessage("")
+	msg, err = ctx.getSlackMessage("")
 	for _, test := range []Test{
 		{true, err == nil},
 		{"休憩を終了する", msg.Attachments[0].Actions[0].Text},
-		{ActionTypeUnrest, msg.Attachments[0].Actions[0].Name},
+		{actionTypeUnrest, msg.Attachments[0].Actions[0].Name},
 		{true, gock.IsDone()},
 	} {
 		test.Compare(t)
 	}
-	setupTimeTableGocks([]TimeTableItem{
+	setupTimeTableGocks([]timeTableItem{
 		{null.IntFrom(10 * 60), null.IntFromPtr(nil), 1},
 		{null.IntFrom(10 * 60), null.IntFrom(11 * 60), 21},
 	})
 	ctx.TimeTableClient = nil
-	msg, err = ctx.GetSlackMessage("")
+	msg, err = ctx.getSlackMessage("")
 	for _, test := range []Test{
 		{true, err == nil},
 		{"休憩を開始する", msg.Attachments[0].Actions[0].Text},
-		{ActionTypeRest, msg.Attachments[0].Actions[0].Name},
+		{actionTypeRest, msg.Attachments[0].Actions[0].Name},
 		{"退社する", msg.Attachments[0].Actions[1].Text},
-		{ActionTypeLeave, msg.Attachments[0].Actions[1].Name},
+		{actionTypeLeave, msg.Attachments[0].Actions[1].Name},
 		{true, gock.IsDone()},
 	} {
 		test.Compare(t)
 	}
-	setupTimeTableGocks([]TimeTableItem{
+	setupTimeTableGocks([]timeTableItem{
 		{null.IntFromPtr(nil), null.IntFromPtr(nil), 1},
 		{null.IntFrom(10 * 60), null.IntFrom(11 * 60), 21},
 	})
 	ctx.TimeTableClient = nil
-	msg, err = ctx.GetSlackMessage("")
+	msg, err = ctx.getSlackMessage("")
 	for _, test := range []Test{
 		{true, err == nil},
 		{"出社する", msg.Attachments[0].Actions[0].Text},
-		{ActionTypeAttend, msg.Attachments[0].Actions[0].Name},
+		{actionTypeAttend, msg.Attachments[0].Actions[0].Name},
 		{true, gock.IsDone()},
 	} {
 		test.Compare(t)

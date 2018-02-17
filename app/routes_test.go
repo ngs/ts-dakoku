@@ -16,7 +16,7 @@ import (
 
 func TestSetupRouter(t *testing.T) {
 	app := createMockApp()
-	router := app.SetupRouter()
+	router := app.setupRouter()
 	paths := []string{}
 	router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 		pathTemplate, _ := route.GetPathTemplate()
@@ -38,7 +38,7 @@ func TestHandleIndex(t *testing.T) {
 	app := createMockApp()
 	res := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/", nil)
-	app.SetupRouter().ServeHTTP(res, req)
+	app.setupRouter().ServeHTTP(res, req)
 	for _, test := range []Test{
 		{200, res.Code},
 		{422, strings.Index(res.Body.String(), `<h1 class="cover-heading">ts-dakoku</h1>`)},
@@ -52,7 +52,7 @@ func TestHandleAuthSuccess(t *testing.T) {
 	app := createMockApp()
 	res := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/success", nil)
-	app.SetupRouter().ServeHTTP(res, req)
+	app.setupRouter().ServeHTTP(res, req)
 	for _, test := range []Test{
 		{200, res.Code},
 		{100, strings.Index(res.Body.String(), "<title>認証完了 - ts-dakoku</title>")},
@@ -64,10 +64,10 @@ func TestHandleAuthSuccess(t *testing.T) {
 
 func TestHandleFavicon(t *testing.T) {
 	app := createMockApp()
-	app.SetupRouter()
+	app.setupRouter()
 	res := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/favicon.ico", nil)
-	app.SetupRouter().ServeHTTP(res, req)
+	app.setupRouter().ServeHTTP(res, req)
 	for _, test := range []Test{
 		{200, res.Code},
 		{"image/vnd.microsoft.icon", res.Header().Get("Content-Type")},
@@ -81,11 +81,11 @@ func TestHandleAuthenticate(t *testing.T) {
 	app.CleanRedis()
 	res := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/oauth/authenticate/", nil)
-	ctx := app.CreateContext(req)
+	ctx := app.createContext(req)
 	ctx.UserID = "FOO"
-	state, _ := ctx.StoreUserIDInState()
+	state, _ := ctx.storeUserIDInState()
 	req, _ = http.NewRequest(http.MethodGet, "https://example.com/oauth/authenticate/"+state, nil)
-	app.SetupRouter().ServeHTTP(res, req)
+	app.setupRouter().ServeHTTP(res, req)
 	for _, test := range []Test{
 		{303, res.Code},
 		{"https://login.salesforce.com/services/oauth2/authorize?access_type=offline&client_id=SALESFORCE_CLIENT_ID+is+set%21&redirect_uri=https%3A%2F%2Fexample.com%2Foauth%2Fcallback&response_type=code&scope=refresh_token+full&state=" + state, res.Header().Get("Location")},
@@ -99,9 +99,9 @@ func TestHandleAuthenticateNotFound(t *testing.T) {
 	app.CleanRedis()
 	res := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/oauth/authenticate/foo", nil)
-	ctx := app.CreateContext(req)
+	ctx := app.createContext(req)
 	ctx.UserID = "FOO"
-	app.SetupRouter().ServeHTTP(res, req)
+	app.setupRouter().ServeHTTP(res, req)
 	for _, test := range []Test{
 		{404, res.Code},
 	} {
@@ -126,14 +126,14 @@ func TestHandleOAuthCallback(t *testing.T) {
 	app.CleanRedis()
 	res := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/", nil)
-	ctx := app.CreateContext(req)
+	ctx := app.createContext(req)
 	ctx.UserID = "FOO"
-	state, _ := ctx.StoreUserIDInState()
-	token := ctx.GetAccessTokenForUser()
+	state, _ := ctx.storeUserIDInState()
+	token := ctx.getAccessTokenForUser()
 	Test{true, token == nil}.Compare(t)
 	req, _ = http.NewRequest(http.MethodGet, "https://example.com/oauth/callback?state="+state+"&code=fjkfjk", nil)
-	app.SetupRouter().ServeHTTP(res, req)
-	token = ctx.GetAccessTokenForUser()
+	app.setupRouter().ServeHTTP(res, req)
+	token = ctx.getAccessTokenForUser()
 	for _, test := range []Test{
 		{302, res.Code},
 		{false, token == nil},
@@ -157,11 +157,11 @@ func TestHandleOAuthCallbackError(t *testing.T) {
 	app.CleanRedis()
 	res := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/", nil)
-	ctx := app.CreateContext(req)
+	ctx := app.createContext(req)
 	ctx.UserID = "FOO"
-	state, _ := ctx.StoreUserIDInState()
+	state, _ := ctx.storeUserIDInState()
 	req, _ = http.NewRequest(http.MethodGet, "https://example.com/oauth/callback?state="+state+"&code=fjkfjk", nil)
-	app.SetupRouter().ServeHTTP(res, req)
+	app.setupRouter().ServeHTTP(res, req)
 	for _, test := range []Test{
 		{500, res.Code},
 	} {
@@ -183,14 +183,14 @@ func TestHandleSlashCommand(t *testing.T) {
 	req := createSlashCommandRequest(url.Values{
 		"token": {"hoge"},
 	})
-	app.SetupRouter().ServeHTTP(res, req)
+	app.setupRouter().ServeHTTP(res, req)
 	Test{401, res.Code}.Compare(t)
 
 	res = httptest.NewRecorder()
 	req = createSlashCommandRequest(url.Values{
 		"token": {app.SlackVerificationToken},
 	})
-	app.SetupRouter().ServeHTTP(res, req)
+	app.setupRouter().ServeHTTP(res, req)
 	for _, test := range []Test{
 		{200, res.Code},
 		{48, strings.Index(res.Body.String(), `"callback_id":"authentication_button"`)},
@@ -204,29 +204,30 @@ func TestHandleActionCallback(t *testing.T) {
 	app := createMockApp()
 	app.CleanRedis()
 	res := httptest.NewRecorder()
-	req := createActionCallbackRequest(ActionTypeAttend, "foo")
-	app.SetupRouter().ServeHTTP(res, req)
+	req := createActionCallbackRequest(actionTypeAttend, "foo")
+	app.setupRouter().ServeHTTP(res, req)
 	Test{401, res.Code}.Compare(t)
 
-	// gock.New("https://teamspirit-1234.cloudforce.test").
-	// 	Get("/services/apexrest/Dakoku").
-	// 	Reply(200).
-	// 	JSON([]map[string]interface{}{{"from": 1, "to": 2, "type": 1}})
-	// app.CleanRedis()
-	// res = httptest.NewRecorder()
-	// req = createActionCallbackRequest(ActionTypeAttend, app.SlackVerificationToken)
-	// ctx.UserID = "FOO"
-	// ctx.SetAccessToken(&oauth2.Token{
-	// 	AccessToken:  "foo",
-	// 	RefreshToken: "bar",
-	// 	TokenType:    "Bearer",
-	// })
-	//
-	// app.SetupRouter().ServeHTTP(res, req)
-	// for _, test := range []Test{
-	// 	{200, res.Code},
-	// 	{48, strings.Index(res.Body.String(), `"callback_id":"authentication_button"`)},
-	// } {
-	// 	test.Compare(t)
-	// }
+	gock.New("https://teamspirit-1234.cloudforce.test").
+		Get("/services/apexrest/Dakoku").
+		Reply(200).
+		JSON([]map[string]interface{}{{"from": 1, "to": 2, "type": 1}})
+	app.CleanRedis()
+	res = httptest.NewRecorder()
+	req = createActionCallbackRequest(actionTypeAttend, app.SlackVerificationToken)
+	ctx := app.createContext(req)
+	ctx.UserID = "FOO"
+	ctx.setAccessToken(&oauth2.Token{
+		AccessToken:  "foo",
+		RefreshToken: "bar",
+		TokenType:    "Bearer",
+	})
+
+	app.setupRouter().ServeHTTP(res, req)
+	for _, test := range []Test{
+		{200, res.Code},
+		{`{"text":"勤務表の更新に失敗しました :warning:","pinned_to":null,"response_type":"ephemeral"}`, res.Body.String()},
+	} {
+		test.Compare(t)
+	}
 }

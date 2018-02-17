@@ -10,15 +10,15 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func (ctx *Context) GetOAuthCallbackURL() string {
+func (ctx *Context) getOAuthCallbackURL() string {
 	return "https://" + ctx.Request.Host + "/oauth/callback"
 }
 
-func (ctx *Context) GetAuthenticateURL(state string) string {
+func (ctx *Context) getAuthenticateURL(state string) string {
 	return "https://" + ctx.Request.Host + "/oauth/authenticate/" + state
 }
 
-func (ctx *Context) SetAccessToken(token *oauth2.Token) error {
+func (ctx *Context) setAccessToken(token *oauth2.Token) error {
 	if ctx.UserID == "" {
 		return errors.New("UserID is not set")
 	}
@@ -30,12 +30,12 @@ func (ctx *Context) SetAccessToken(token *oauth2.Token) error {
 	return err
 }
 
-func (ctx *Context) GetOAuth2Config() *oauth2.Config {
+func (ctx *Context) getOAuth2Config() *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     ctx.ClientID,
 		ClientSecret: ctx.ClientSecret,
 		Scopes:       []string{},
-		RedirectURL:  ctx.GetOAuthCallbackURL(),
+		RedirectURL:  ctx.getOAuthCallbackURL(),
 		Endpoint: oauth2.Endpoint{
 			// https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/intro_understanding_oauth_endpoints.htm
 			AuthURL:  "https://login.salesforce.com/services/oauth2/authorize",
@@ -44,7 +44,7 @@ func (ctx *Context) GetOAuth2Config() *oauth2.Config {
 	}
 }
 
-func (ctx *Context) GetAccessTokenForUser() *oauth2.Token {
+func (ctx *Context) getAccessTokenForUser() *oauth2.Token {
 	if ctx.UserID == "" {
 		return nil
 	}
@@ -56,8 +56,8 @@ func (ctx *Context) GetAccessTokenForUser() *oauth2.Token {
 	return &token
 }
 
-func (ctx *Context) GetAccessToken(code string, state string) (*oauth2.Token, error) {
-	config := ctx.GetOAuth2Config()
+func (ctx *Context) getAccessToken(code string, state string) (*oauth2.Token, error) {
+	config := ctx.getOAuth2Config()
 	t, err := config.Exchange(context.TODO(), code)
 	if err != nil {
 		return nil, err
@@ -65,12 +65,12 @@ func (ctx *Context) GetAccessToken(code string, state string) (*oauth2.Token, er
 	return t, nil
 }
 
-func (ctx *Context) GetOAuth2Client() *http.Client {
-	token := ctx.GetAccessTokenForUser()
+func (ctx *Context) getOAuth2Client() *http.Client {
+	token := ctx.getAccessTokenForUser()
 	if token == nil {
 		return nil
 	}
-	src := ctx.GetOAuth2Config().TokenSource(context.TODO(), token)
+	src := ctx.getOAuth2Config().TokenSource(context.TODO(), token)
 	ts := oauth2.ReuseTokenSource(token, src)
 	return oauth2.NewClient(oauth2.NoContext, ts)
 }
