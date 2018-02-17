@@ -121,7 +121,6 @@ func TestHandleOAuthCallback(t *testing.T) {
 			TokenType:    "Bearer",
 			Expiry:       expiry,
 		})
-
 	app := createMockApp()
 	app.CleanRedis()
 	res := httptest.NewRecorder()
