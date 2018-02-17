@@ -4,6 +4,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 func (app *App) CleanRedis() {
@@ -82,4 +83,20 @@ func TestNewApp(t *testing.T) {
 		test.Compare(t)
 	}
 	os.Setenv("REDIS_URL", origiinalRedisURL)
+}
+
+func TestRun(t *testing.T) {
+	go func() {
+		_, err := Run()
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+	}()
+	time.Sleep(time.Second)
+	os.Setenv("SALESFORCE_CLIENT_SECRET", "")
+	go func() {
+		_, err := Run()
+		Test{"SALESFORCE_CLIENT_SECRET are not configured", err.Error()}.Compare(t)
+	}()
+	time.Sleep(time.Second)
 }
