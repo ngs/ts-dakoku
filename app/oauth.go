@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/garyburd/redigo/redis"
 	"golang.org/x/oauth2"
@@ -21,6 +22,10 @@ func (ctx *Context) getAuthenticateURL(state string) string {
 func (ctx *Context) setAccessToken(token *oauth2.Token) error {
 	if ctx.UserID == "" {
 		return errors.New("UserID is not set")
+	}
+	// SalesForce always returns zero-expiry, but it expires.
+	if token.Expiry.IsZero() {
+		token.Expiry = time.Now().Add(time.Hour).Truncate(time.Second)
 	}
 	tokenJSON, err := json.Marshal(token)
 	if err != nil {
@@ -72,5 +77,8 @@ func (ctx *Context) getOAuth2Client() *http.Client {
 	}
 	src := ctx.getOAuth2Config().TokenSource(context.TODO(), token)
 	ts := oauth2.ReuseTokenSource(token, src)
+	if token, _ := ts.Token(); token != nil {
+		ctx.setAccessToken(token)
+	}
 	return oauth2.NewClient(oauth2.NoContext, ts)
 }
