@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/garyburd/redigo/redis"
 	apachelog "github.com/lestrrat/go-apache-logformat"
@@ -22,6 +23,7 @@ type App struct {
 	TokenStoreKey          string
 	TeamSpiritHost         string
 	RedisConn              redis.Conn
+	TimeoutDuration        time.Duration
 }
 
 // New Returns new app
@@ -58,6 +60,13 @@ func new() (*App, error) {
 		app.TokenStoreKey = k
 	} else {
 		app.TokenStoreKey = "tsdakoku:oauth_tokens"
+	}
+
+	duration, _ := strconv.Atoi(os.Getenv("SALESFORCE_TIMEOUT_MINUTES"))
+	if duration > 0 {
+		app.TimeoutDuration = time.Duration(duration) * time.Minute
+	} else {
+		app.TimeoutDuration = time.Hour
 	}
 
 	app.ClientID = clientID
