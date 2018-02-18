@@ -53,7 +53,7 @@ func TestSetAndGetAccessToken(t *testing.T) {
 
 func TestSetAndGetOAuthClient(t *testing.T) {
 	defer gock.Off()
-	newExpiry := time.Now().Add(time.Hour).Truncate(time.Second)
+	newExpiry := time.Now().Add(2 * time.Hour).Truncate(time.Second)
 	oldExpiry := time.Now().Add(-10 * time.Hour).Truncate(time.Second)
 	resExpiry, _ := time.Parse("2016-01-02T15:04:05Z", "0001-01-01T00:00:00Z")
 	gock.New("https://login.salesforce.com").
@@ -76,6 +76,7 @@ func TestSetAndGetOAuthClient(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/test", nil)
 	ctx := app.createContext(req)
 	ctx.UserID = "FOO"
+	ctx.TimeoutDuration = 2 * time.Hour
 	err := ctx.setAccessToken(token)
 	token = ctx.getAccessTokenForUser()
 	for _, test := range []Test{

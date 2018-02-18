@@ -25,7 +25,7 @@ func (ctx *Context) setAccessToken(token *oauth2.Token) error {
 	}
 	// SalesForce always returns zero-expiry, but it expires.
 	if token.Expiry.IsZero() {
-		token.Expiry = time.Now().Add(time.Hour).Truncate(time.Second)
+		token.Expiry = time.Now().Add(ctx.TimeoutDuration).Truncate(time.Second)
 	}
 	tokenJSON, err := json.Marshal(token)
 	if err != nil {
