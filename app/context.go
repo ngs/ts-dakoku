@@ -20,6 +20,7 @@ type Context struct {
 	SlackVerificationToken string
 	TimeoutDuration        time.Duration
 	TimeTableClient        *timeTableClient
+	randomString           func(len int) string
 }
 
 func (app *App) createContext(r *http.Request) *Context {
@@ -33,6 +34,7 @@ func (app *App) createContext(r *http.Request) *Context {
 		SlackVerificationToken: app.SlackVerificationToken,
 		TimeoutDuration:        app.TimeoutDuration,
 		Request:                r,
+		randomString:           randomString,
 	}
 }
 
