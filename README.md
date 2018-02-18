@@ -60,12 +60,15 @@ docker run --name ts-dakoku -p 8000:8000 -d --rm \
 環境変数
 --------
 
-| Name                       | Description                                  |
-| :------------------------- | :------------------------------------------  |
-| `SALESFORCE_CLIENT_ID`     | 接続アプリケーションのコンシューマ鍵         |
-| `SALESFORCE_CLIENT_SECRET` | 接続アプリケーションのコンシューマ秘密鍵     |
-| `SLACK_VERIFICATION_TOKEN` | Slack アプリケーション の Verification Token |
-| `TEAMSPIRIT_HOST`          | TeamSpirit のホスト名                        |
+| Name                         | Description                                  | Default               |
+| :--------------------------- | :------------------------------------------  | :-------------------- |
+| `SALESFORCE_CLIENT_ID`       | 接続アプリケーションのコンシューマ鍵                |                       |
+| `SALESFORCE_CLIENT_SECRET`   | 接続アプリケーションのコンシューマ秘密鍵             |                       |
+| `SLACK_VERIFICATION_TOKEN`   | Slack アプリケーション の Verification Token    |                        |
+| `TEAMSPIRIT_HOST`            | TeamSpirit のホスト名                          |                       |
+| `STATE_STORE_KEY`            | Redis に保存する認証ステートのキー                | `tsdakoku:states`      |
+| `OAUTH_TOKEN_STORE_KEY`      | Redis に保存する OAuth2 トークンのキー           | `tsdakoku:oauth_tokens` |
+| `SALESFORCE_TIMEOUT_MINUTES` | アクセストークンの有効期限 (分)                   | `60`                   |
 
 Author
 ======
