@@ -59,22 +59,35 @@ func TestNewApp(t *testing.T) {
 		{true, err == nil},
 		{"tsdakoku:states", app.StateStoreKey},
 		{"tsdakoku:oauth_tokens", app.TokenStoreKey},
+		{time.Hour, app.TimeoutDuration},
 	} {
 		test.Compare(t)
 	}
 	os.Setenv("STATE_STORE_KEY", "tsdakoku-test:states")
 	os.Setenv("OAUTH_TOKEN_STORE_KEY", "tsdakoku-test:oauth_tokens")
+	os.Setenv("SALESFORCE_TIMEOUT_MINUTES", "20")
 	app, err = new()
 	for _, test := range []Test{
 		{false, app == nil},
 		{true, err == nil},
 		{"tsdakoku-test:states", app.StateStoreKey},
 		{"tsdakoku-test:oauth_tokens", app.TokenStoreKey},
+		{20 * time.Minute, app.TimeoutDuration},
 	} {
 		test.Compare(t)
 	}
+	os.Setenv("SALESFORCE_TIMEOUT_MINUTES", "100hoge")
+
+	app, err = new()
+	for _, test := range []Test{
+		{time.Hour, app.TimeoutDuration},
+	} {
+		test.Compare(t)
+	}
+
 	origiinalRedisURL := os.Getenv("REDIS_URL")
 	os.Setenv("REDIS_URL", "redis://hoge")
+	os.Setenv("SALESFORCE_TIMEOUT_MINUTES", "")
 	app, err = new()
 	for _, test := range []Test{
 		{false, app == nil},
