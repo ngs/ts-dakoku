@@ -2,6 +2,7 @@ package app
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/garyburd/redigo/redis"
 )
@@ -17,6 +18,7 @@ type Context struct {
 	TokenStoreKey          string
 	TeamSpiritHost         string
 	SlackVerificationToken string
+	TimeoutDuration        time.Duration
 	TimeTableClient        *timeTableClient
 }
 
@@ -29,6 +31,7 @@ func (app *App) createContext(r *http.Request) *Context {
 		TokenStoreKey:          app.TokenStoreKey,
 		TeamSpiritHost:         app.TeamSpiritHost,
 		SlackVerificationToken: app.SlackVerificationToken,
+		TimeoutDuration:        app.TimeoutDuration,
 		Request:                r,
 	}
 }
