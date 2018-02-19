@@ -182,10 +182,11 @@ func (client *timeTableClient) UpdateTimeTable(timeTable *timeTable) (bool, erro
 		return false, err
 	}
 	body, err := client.doRequest(http.MethodPost, bytes.NewBuffer(b))
+	fmt.Printf("%v %v %v\n", string(body), err, string(body) == `"OK"`)
 	if err != nil {
 		return false, err
 	}
-	return string(body) == "OK", nil
+	return string(body) == `"OK"`, nil
 }
 
 func (client *timeTableClient) SetAttendance(attendance bool) (bool, error) {
@@ -198,5 +199,5 @@ func (client *timeTableClient) SetAttendance(attendance bool) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return string(body) == "OK", nil
+	return string(body) == `"OK"`, nil
 }
