@@ -91,7 +91,7 @@ func testGetActionCallbackWithActionType(t *testing.T, actionType string, succes
 		test.Compare(t)
 	}
 
-	setupActionCallbackGocks(actionType, "OK")
+	setupActionCallbackGocks(actionType, `"OK"`)
 	msg, responseURL, err = ctx.getActionCallback(&slack.AttachmentActionCallback{
 		Actions:     []slack.AttachmentAction{{Name: actionType}},
 		Token:       app.SlackVerificationToken,
