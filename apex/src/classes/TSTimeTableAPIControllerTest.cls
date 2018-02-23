@@ -1,19 +1,53 @@
 @isTest public class TSTimeTableAPIControllerTest {
     public static testMethod void testGetTimeTable(){
         TSTimeTableAPIController ctrl = new TSTimeTableAPIController();
-        ctrl.empDays = new List<teamspirit__AtkEmpDay__c>();
-        List<Map<String, Integer>> res = ctrl.getTimeTable();
-        System.assert(res.size() == 0);
+        ctrl.empToday = null;
+        TSTimeTableAPIController.TimeTableResponse res = ctrl.getTimeTable();
+        System.assert(res.timeTable.size() == 0);
+        System.assert(!res.isHoliday);
 
-        teamspirit__AtkEmpDay__c obj = new teamspirit__AtkEmpDay__c(
+        ctrl.empToday = new teamspirit__AtkEmpDay__c(
             teamspirit__Date__c = Date.today(),
             teamspirit__StartTime__c = 600,
             teamspirit__EndTime__c = 1140,
             teamspirit__TimeTable__c = '0720076521:1080----21:1290132021:1440147021:'
         );
-        ctrl.empDays = new List<teamspirit__AtkEmpDay__c>{ obj };
-            res = ctrl.getTimeTable();
-        System.assert(res.size() == 5);
+        res = ctrl.getTimeTable();
+        System.assert(res.timeTable.size() == 5);
+        System.assert(!res.isHoliday);
+    }
+
+    public static testMethod void testIsHoliday(){
+        TSTimeTableAPIController ctrl = new TSTimeTableAPIController();
+        ctrl.empToday = null;
+        System.assert(!ctrl.isHoliday());
+
+        ctrl.empToday = new teamspirit__AtkEmpDay__c(
+            teamspirit__Date__c = Date.today(),
+            teamspirit__StartTime__c = 600,
+            teamspirit__EndTime__c = 1140,
+            teamspirit__TimeTable__c = '0720076521:1080----21:1290132021:1440147021:'
+        );
+        System.assert(!ctrl.isHoliday());
+
+        ctrl.empToday = new teamspirit__AtkEmpDay__c(
+            teamspirit__Date__c = Date.today(),
+            teamspirit__DayType__c = '2',
+            teamspirit__StartTime__c = 600,
+            teamspirit__EndTime__c = 1140,
+            teamspirit__HolidayWorkApplyId__c = 'a0BN000000XXXXXXXX',
+            teamspirit__TimeTable__c = '0720076521:1080----21:1290132021:1440147021:'
+        );
+        System.assert(!ctrl.isHoliday());
+
+        ctrl.empToday = new teamspirit__AtkEmpDay__c(
+            teamspirit__Date__c = Date.today(),
+            teamspirit__DayType__c = '2',
+            teamspirit__StartTime__c = 600,
+            teamspirit__EndTime__c = 1140,
+            teamspirit__TimeTable__c = '0720076521:1080----21:1290132021:1440147021:'
+        );
+        System.assert(ctrl.isHoliday());
     }
 
     public static testMethod void testInputTimeTable(){
@@ -37,7 +71,7 @@
         System.assert(res1 == 'NG');
         String res2 = TSTimeTableAPIController.handleSetAttendance(false);
         System.assert(res2 == 'NG');
-        List<Map<String, Integer>> res3 = TSTimeTableAPIController.handleGetTimeTable();
-        System.assert(res3.size() == 0);
+        TSTimeTableAPIController.TimeTableResponse res3 = TSTimeTableAPIController.handleGetTimeTable();
+        System.assert(res3.timeTable.size() == 0);
     }
 }

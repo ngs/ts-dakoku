@@ -7,9 +7,15 @@ global with sharing class TSTimeTableAPIController {
     public String lastModifiedDate;
     public Integer stdStartTime;
     public Integer stdEndTime;
+    public teamspirit__AtkEmpDay__c empToday;
+
+    global class TimeTableResponse {
+        public List<Map<String, Integer>> timeTable;
+        public Boolean isHoliday;
+    }
 
     @HttpGet
-    global static List<Map<String, Integer>> handleGetTimeTable() {
+    global static TimeTableResponse handleGetTimeTable() {
         TSTimeTableAPIController ctrl = new TSTimeTableAPIController();
         return ctrl.getTimeTable();
     }
@@ -60,23 +66,16 @@ global with sharing class TSTimeTableAPIController {
         return res.get('result') == 'OK';
     }
 
-    public List<Map<String, Integer>>getTimeTable() {
-        Date today = getToday();
-        teamspirit__AtkEmpDay__c empToday = null;
-        for (teamspirit__AtkEmpDay__c day: empDays) {
-            if (day.teamspirit__Date__c == today) {
-                empToday = day;
-                break;
-            }
-        }
-
+    public TimeTableResponse getTimeTable() {
+        TimeTableResponse res = new TimeTableResponse();
+        res.isHoliday = isHoliday();
         List<Map<String, Integer>> timeTable = new List<Map<String, Integer>>();
+        res.timeTable = timeTable;
         if (empToday == null) {
-            return timeTable;
+            return res;
         }
 
         Map<String, Integer> item = new Map<String, Integer>{};
-
             item.put('from', Integer.valueOf(empToday.teamspirit__StartTime__c));
         item.put('to', Integer.valueOf(empToday.teamspirit__EndTime__c));
         item.put('type', 1);
@@ -104,7 +103,7 @@ global with sharing class TSTimeTableAPIController {
             timeTable.add(item);
         }
 
-        return timeTable;
+        return res;
     }
 
     private Date getToday() {
@@ -126,8 +125,19 @@ global with sharing class TSTimeTableAPIController {
         if (empDays == null) {
             empDays = new List<teamspirit__AtkEmpDay__c>();
         }
+        Date today = getToday();
+        for (teamspirit__AtkEmpDay__c day: empDays) {
+            if (day.teamspirit__Date__c == today) {
+                empToday = day;
+                break;
+            }
+        }
         yearMonth = (Integer) empMonth.get('yearMonth');
         startDate = (String) empMonth.get('startDate');
+    }
+
+    public Boolean isHoliday() {
+        return empToday != null && empToday.teamspirit__DayType__c != null && Integer.valueOf(empToday.teamspirit__DayType__c) > 0 && empToday.teamspirit__HolidayWorkApplyId__c == null;
     }
 
     private Map<String, Object>getBaseParams() {

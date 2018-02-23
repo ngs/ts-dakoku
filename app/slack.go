@@ -108,6 +108,11 @@ func (ctx *Context) getSlackMessage(text string) (*slack.Msg, error) {
 			Text: "既に退社済です。打刻修正は <https://" + ctx.TeamSpiritHost + "|TeamSpirit> で行なってください。",
 		}, nil
 	}
+	if timeTable.IsHoliday != nil && *timeTable.IsHoliday == true {
+		return &slack.Msg{
+			Text: "本日は休日です :sunny:",
+		}, nil
+	}
 	if timeTable.IsResting() {
 		return &slack.Msg{
 			Attachments: []slack.Attachment{

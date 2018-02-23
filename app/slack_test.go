@@ -49,7 +49,10 @@ func setupActionCallbackGocks(actionType string, responseText string) {
 	gock.New("https://teamspirit-1234.cloudforce.test").
 		Get("/services/apexrest/Dakoku").
 		Reply(200).
-		JSON([]map[string]interface{}{{"from": 1, "to": 2, "type": 1}})
+		JSON(map[string]interface{}{
+			"timeTable": []map[string]interface{}{{"from": 1, "to": 2, "type": 1}},
+			"isHoliday": false,
+		})
 }
 
 func testGetActionCallbackWithActionType(t *testing.T, actionType string, successMessage string) {
@@ -142,11 +145,14 @@ func TestGetActionCallback(t *testing.T) {
 	testGetActionCallbackWithActionType(t, actionTypeUnrest, "休憩を終了しました :computer:")
 }
 
-func setupTimeTableGocks(items []timeTableItem) {
+func setupTimeTableGocks(items []timeTableItem, isHoliday *bool) {
 	gock.New("https://teamspirit-1234.cloudforce.test").
 		Get("/services/apexrest/Dakoku").
 		Reply(200).
-		JSON(items)
+		JSON(map[string]interface{}{
+			"timeTable": items,
+			"isHoliday": isHoliday,
+		})
 }
 
 func TestGetSlackMessage(t *testing.T) {
@@ -179,7 +185,7 @@ func TestGetSlackMessage(t *testing.T) {
 	}
 	setupTimeTableGocks([]timeTableItem{
 		{null.IntFrom(10 * 60), null.IntFrom(19 * 60), 1},
-	})
+	}, nil)
 	ctx.TimeTableClient = nil
 	msg, err = ctx.getSlackMessage("")
 	for _, test := range []Test{
@@ -192,7 +198,7 @@ func TestGetSlackMessage(t *testing.T) {
 	setupTimeTableGocks([]timeTableItem{
 		{null.IntFrom(10 * 60), null.IntFromPtr(nil), 1},
 		{null.IntFrom(10 * 60), null.IntFromPtr(nil), 21},
-	})
+	}, &[]bool{false}[0])
 	ctx.TimeTableClient = nil
 	msg, err = ctx.getSlackMessage("")
 	for _, test := range []Test{
@@ -206,7 +212,7 @@ func TestGetSlackMessage(t *testing.T) {
 	setupTimeTableGocks([]timeTableItem{
 		{null.IntFrom(10 * 60), null.IntFromPtr(nil), 1},
 		{null.IntFrom(10 * 60), null.IntFromPtr(nil), 21},
-	})
+	}, &[]bool{false}[0])
 	ctx.TimeTableClient = nil
 	msg, err = ctx.getSlackMessage("")
 	for _, test := range []Test{
@@ -220,7 +226,7 @@ func TestGetSlackMessage(t *testing.T) {
 	setupTimeTableGocks([]timeTableItem{
 		{null.IntFrom(10 * 60), null.IntFromPtr(nil), 1},
 		{null.IntFrom(10 * 60), null.IntFrom(11 * 60), 21},
-	})
+	}, &[]bool{false}[0])
 	ctx.TimeTableClient = nil
 	msg, err = ctx.getSlackMessage("")
 	for _, test := range []Test{
@@ -236,13 +242,23 @@ func TestGetSlackMessage(t *testing.T) {
 	setupTimeTableGocks([]timeTableItem{
 		{null.IntFromPtr(nil), null.IntFromPtr(nil), 1},
 		{null.IntFrom(10 * 60), null.IntFrom(11 * 60), 21},
-	})
+	}, &[]bool{false}[0])
 	ctx.TimeTableClient = nil
 	msg, err = ctx.getSlackMessage("")
 	for _, test := range []Test{
 		{true, err == nil},
 		{"出社する", msg.Attachments[0].Actions[0].Text},
 		{actionTypeAttend, msg.Attachments[0].Actions[0].Name},
+		{true, gock.IsDone()},
+	} {
+		test.Compare(t)
+	}
+	setupTimeTableGocks([]timeTableItem{}, &[]bool{true}[0])
+	ctx.TimeTableClient = nil
+	msg, err = ctx.getSlackMessage("")
+	for _, test := range []Test{
+		{true, err == nil},
+		{"本日は休日です :sunny:", msg.Text},
 		{true, gock.IsDone()},
 	} {
 		test.Compare(t)
