@@ -13,7 +13,8 @@ import (
 )
 
 type timeTable struct {
-	Items []timeTableItem `json:"timeTable"`
+	Items     []timeTableItem `json:"timeTable"`
+	IsHoliday *bool           `json:"isHoliday,omitempty"`
 }
 
 type timeTableItem struct {
@@ -37,11 +38,11 @@ func parseTimeTable(body []byte) (*timeTable, error) {
 	if err := json.Unmarshal(body, &errors); err == nil && len(errors) > 0 && errors[0].Code != "" {
 		return nil, fmt.Errorf("Error: %+v (%+v)", errors[0].Message, errors[0].Code)
 	}
-	var items []timeTableItem
-	if err := json.Unmarshal(body, &items); err != nil {
+	var timeTable timeTable
+	if err := json.Unmarshal(body, &timeTable); err != nil {
 		return nil, err
 	}
-	return &timeTable{Items: items}, nil
+	return &timeTable, nil
 }
 
 func convertTime(time time.Time) null.Int {

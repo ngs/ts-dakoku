@@ -42,7 +42,7 @@ func TestMarshalTimeTable(t *testing.T) {
 }
 
 func TestParseTimeTable(t *testing.T) {
-	timeTable, err := parseTimeTable([]byte(`[{"from":600, "to": null, "type": 1}, {"from":780, "to": 840, "type": 21}]`))
+	timeTable, err := parseTimeTable([]byte(`{"isHoliday": false, "timeTable":[{"from":600, "to": null, "type": 1}, {"from":780, "to": 840, "type": 21}]}`))
 	for _, test := range []Test{
 		{nil, err},
 		{2, len(timeTable.Items)},

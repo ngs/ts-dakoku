@@ -252,7 +252,10 @@ func TestHandleActionCallback(t *testing.T) {
 	gock.New("https://teamspirit-1234.cloudforce.test").
 		Get("/services/apexrest/Dakoku").
 		Reply(200).
-		JSON([]map[string]interface{}{{"from": 1, "to": 2, "type": 1}})
+		JSON(map[string]interface{}{
+			"timeTable": []map[string]interface{}{{"from": 1, "to": 2, "type": 1}},
+			"isHoliday": false,
+		})
 
 	gock.New("https://teamspirit-1234.cloudforce.test").
 		Put("/services/apexrest/Dakoku").
