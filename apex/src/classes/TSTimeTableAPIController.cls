@@ -9,8 +9,13 @@ global with sharing class TSTimeTableAPIController {
     public Integer stdEndTime;
     public teamspirit__AtkEmpDay__c empToday;
 
+    global class TimeTableResponse {
+        public List<Map<String, Integer>> timeTable;
+        public Boolean isHoliday;
+    }
+
     @HttpGet
-    global static List<Map<String, Object>> handleGetTimeTable() {
+    global static TimeTableResponse handleGetTimeTable() {
         TSTimeTableAPIController ctrl = new TSTimeTableAPIController();
         return ctrl.getTimeTable();
     }
@@ -61,10 +66,13 @@ global with sharing class TSTimeTableAPIController {
         return res.get('result') == 'OK';
     }
 
-    public List<Map<String, Integer>>getTimeTable() {
+    public TimeTableResponse getTimeTable() {
+        TimeTableResponse res = new TimeTableResponse();
+        res.isHoliday = isHoliday();
         List<Map<String, Integer>> timeTable = new List<Map<String, Integer>>();
+        res.timeTable = timeTable;
         if (empToday == null) {
-            return timeTable;
+            return res;
         }
 
         Map<String, Integer> item = new Map<String, Integer>{};
@@ -95,7 +103,7 @@ global with sharing class TSTimeTableAPIController {
             timeTable.add(item);
         }
 
-        return timeTable;
+        return res;
     }
 
     private Date getToday() {

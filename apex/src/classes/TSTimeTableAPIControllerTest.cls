@@ -2,8 +2,9 @@
     public static testMethod void testGetTimeTable(){
         TSTimeTableAPIController ctrl = new TSTimeTableAPIController();
         ctrl.empToday = null;
-        List<Map<String, Integer>> res = ctrl.getTimeTable();
-        System.assert(res.size() == 0);
+        TSTimeTableAPIController.TimeTableResponse res = ctrl.getTimeTable();
+        System.assert(res.timeTable.size() == 0);
+        System.assert(!res.isHoliday);
 
         ctrl.empToday = new teamspirit__AtkEmpDay__c(
             teamspirit__Date__c = Date.today(),
@@ -12,7 +13,8 @@
             teamspirit__TimeTable__c = '0720076521:1080----21:1290132021:1440147021:'
         );
         res = ctrl.getTimeTable();
-        System.assert(res.size() == 5);
+        System.assert(res.timeTable.size() == 5);
+        System.assert(!res.isHoliday);
     }
 
     public static testMethod void testIsHoliday(){
@@ -69,7 +71,7 @@
         System.assert(res1 == 'NG');
         String res2 = TSTimeTableAPIController.handleSetAttendance(false);
         System.assert(res2 == 'NG');
-        List<Map<String, Integer>> res3 = TSTimeTableAPIController.handleGetTimeTable();
-        System.assert(res3.size() == 0);
+        TSTimeTableAPIController.TimeTableResponse res3 = TSTimeTableAPIController.handleGetTimeTable();
+        System.assert(res3.timeTable.size() == 0);
     }
 }
