@@ -62,7 +62,7 @@ func testGetActionCallbackWithActionType(t *testing.T, actionType string, succes
 	req, _ := http.NewRequest(http.MethodPost, "https://example.com/hooks/interactive", strings.NewReader(""))
 	ctx := app.createContext(req)
 	ctx.UserID = "FOO"
-	ctx.setAccessToken(&oauth2.Token{
+	ctx.setSalesforceAccessToken(&oauth2.Token{
 		AccessToken:  "foo",
 		RefreshToken: "bar",
 		TokenType:    "Bearer",
@@ -88,7 +88,7 @@ func testGetActionCallbackWithActionType(t *testing.T, actionType string, succes
 		{true, err == nil},
 		{"https://hooks.slack.test/coolhook", responseURL},
 		{"TeamSpirit で認証を行って、再度 `/ts` コマンドを実行してください :bow:", msg.Attachments[0].Text},
-		{0, strings.Index(msg.Attachments[0].Actions[0].URL, "https://example.com/oauth/authenticate/")},
+		{0, strings.Index(msg.Attachments[0].Actions[0].URL, "https://example.com/oauth/salesforce/authenticate/")},
 		{true, gock.IsDone()},
 	} {
 		test.Compare(t)
@@ -161,25 +161,25 @@ func TestGetSlackMessage(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodPost, "https://example.com/hooks/slash", bytes.NewBufferString(""))
 	ctx := app.createContext(req)
 	ctx.UserID = "BAZ"
-	msg, err := ctx.getSlackMessage("")
+	msg, err := ctx.getSlackMessage("T12345678", "")
 	for _, test := range []Test{
 		{true, err == nil},
 		{"TeamSpirit で認証を行って、再度 `/ts` コマンドを実行してください :bow:", msg.Attachments[0].Text},
-		{0, strings.Index(msg.Attachments[0].Actions[0].URL, "https://example.com/oauth/authenticate/")},
+		{0, strings.Index(msg.Attachments[0].Actions[0].URL, "https://example.com/oauth/salesforce/authenticate/")},
 	} {
 		test.Compare(t)
 	}
-	ctx.setAccessToken(&oauth2.Token{
+	ctx.setSalesforceAccessToken(&oauth2.Token{
 		AccessToken:  "foo",
 		RefreshToken: "bar",
 		TokenType:    "Bearer",
 	})
 	ctx.TimeTableClient = nil
-	msg, err = ctx.getSlackMessage("")
+	msg, err = ctx.getSlackMessage("T12345678", "")
 	for _, test := range []Test{
 		{true, err == nil},
 		{"TeamSpirit で認証を行って、再度 `/ts` コマンドを実行してください :bow:", msg.Attachments[0].Text},
-		{0, strings.Index(msg.Attachments[0].Actions[0].URL, "https://example.com/oauth/authenticate/")},
+		{0, strings.Index(msg.Attachments[0].Actions[0].URL, "https://example.com/oauth/salesforce/authenticate/")},
 	} {
 		test.Compare(t)
 	}
@@ -187,7 +187,7 @@ func TestGetSlackMessage(t *testing.T) {
 		{null.IntFrom(10 * 60), null.IntFrom(19 * 60), 1},
 	}, nil)
 	ctx.TimeTableClient = nil
-	msg, err = ctx.getSlackMessage("")
+	msg, err = ctx.getSlackMessage("T12345678", "")
 	for _, test := range []Test{
 		{true, err == nil},
 		{"既に退社済です。打刻修正は <https://teamspirit-1234.cloudforce.test|TeamSpirit> で行なってください。", msg.Text},
@@ -200,7 +200,7 @@ func TestGetSlackMessage(t *testing.T) {
 		{null.IntFrom(10 * 60), null.IntFromPtr(nil), 21},
 	}, &[]bool{false}[0])
 	ctx.TimeTableClient = nil
-	msg, err = ctx.getSlackMessage("")
+	msg, err = ctx.getSlackMessage("T12345678", "")
 	for _, test := range []Test{
 		{true, err == nil},
 		{"休憩を終了する", msg.Attachments[0].Actions[0].Text},
@@ -214,7 +214,7 @@ func TestGetSlackMessage(t *testing.T) {
 		{null.IntFrom(10 * 60), null.IntFromPtr(nil), 21},
 	}, &[]bool{false}[0])
 	ctx.TimeTableClient = nil
-	msg, err = ctx.getSlackMessage("")
+	msg, err = ctx.getSlackMessage("T12345678", "")
 	for _, test := range []Test{
 		{true, err == nil},
 		{"休憩を終了する", msg.Attachments[0].Actions[0].Text},
@@ -228,7 +228,7 @@ func TestGetSlackMessage(t *testing.T) {
 		{null.IntFrom(10 * 60), null.IntFrom(11 * 60), 21},
 	}, &[]bool{false}[0])
 	ctx.TimeTableClient = nil
-	msg, err = ctx.getSlackMessage("")
+	msg, err = ctx.getSlackMessage("T12345678", "")
 	for _, test := range []Test{
 		{true, err == nil},
 		{"休憩を開始する", msg.Attachments[0].Actions[0].Text},
@@ -244,7 +244,7 @@ func TestGetSlackMessage(t *testing.T) {
 		{null.IntFrom(10 * 60), null.IntFrom(11 * 60), 21},
 	}, &[]bool{false}[0])
 	ctx.TimeTableClient = nil
-	msg, err = ctx.getSlackMessage("")
+	msg, err = ctx.getSlackMessage("T12345678", "")
 	for _, test := range []Test{
 		{true, err == nil},
 		{"出社する", msg.Attachments[0].Actions[0].Text},
@@ -255,7 +255,7 @@ func TestGetSlackMessage(t *testing.T) {
 	}
 	setupTimeTableGocks([]timeTableItem{}, &[]bool{true}[0])
 	ctx.TimeTableClient = nil
-	msg, err = ctx.getSlackMessage("")
+	msg, err = ctx.getSlackMessage("T12345678", "")
 	for _, test := range []Test{
 		{true, err == nil},
 		{"本日は休日です :sunny:", msg.Text},

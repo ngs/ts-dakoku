@@ -7,10 +7,13 @@ import (
 )
 
 const (
-	actionTypeAttend = "attend"
-	actionTypeRest   = "rest"
-	actionTypeUnrest = "unrest"
-	actionTypeLeave  = "leave"
+	actionTypeAttend          = "attend"
+	actionTypeRest            = "rest"
+	actionTypeUnrest          = "unrest"
+	actionTypeLeave           = "leave"
+	actionTypeSelectChannel   = "select-channel"
+	actionTypeUnselectChannel = "unselect-channel"
+	callbackIDChannelSelect   = "slack_channel_select_button"
 )
 
 func (ctx *Context) getActionCallback(data *slack.AttachmentActionCallback) (*slack.Msg, string, error) {
@@ -86,7 +89,7 @@ func (ctx *Context) getLoginSlackMessage() (*slack.Msg, error) {
 						Text:  "認証する",
 						Style: "primary",
 						Type:  "button",
-						URL:   ctx.getAuthenticateURL(state),
+						URL:   ctx.getSalesforceAuthenticateURL(state),
 					},
 				},
 			},
@@ -94,7 +97,59 @@ func (ctx *Context) getLoginSlackMessage() (*slack.Msg, error) {
 	}, nil
 }
 
-func (ctx *Context) getSlackMessage(text string) (*slack.Msg, error) {
+func (ctx *Context) getAuthenticateSlackMessage(team string) (*slack.Msg, error) {
+	state, err := ctx.storeUserIDInState()
+	if err != nil {
+		return nil, err
+	}
+	return &slack.Msg{
+		Attachments: []slack.Attachment{
+			slack.Attachment{
+				Text:       "Slack で認証を行って、再度 `/ts channel` コマンドを実行してください :bow:",
+				CallbackID: "slack_authentication_button",
+				Actions: []slack.AttachmentAction{
+					slack.AttachmentAction{
+						Name:  "slack-authenticate",
+						Value: "slack-authenticate",
+						Text:  "認証する",
+						Style: "primary",
+						Type:  "button",
+						URL:   ctx.getSlackAuthenticateURL(team, state),
+					},
+				},
+			},
+		},
+	}, nil
+}
+
+func (ctx *Context) getChannelSelectSlackMessage() (*slack.Msg, error) {
+	return &slack.Msg{
+		Attachments: []slack.Attachment{
+			slack.Attachment{
+				Text:       "打刻時に通知するチャネルを選択して下さい",
+				CallbackID: callbackIDChannelSelect,
+				Actions: []slack.AttachmentAction{
+					slack.AttachmentAction{
+						Name:       actionTypeSelectChannel,
+						Value:      actionTypeSelectChannel,
+						Text:       "チャネルを選択",
+						Type:       "select",
+						DataSource: "channels",
+					},
+					slack.AttachmentAction{
+						Name:  actionTypeUnrest,
+						Value: actionTypeUnrest,
+						Text:  "通知を止める",
+						Style: "danger",
+						Type:  "button",
+					},
+				},
+			},
+		},
+	}, nil
+}
+
+func (ctx *Context) getSlackMessage(team, text string) (*slack.Msg, error) {
 	client := ctx.createTimeTableClient()
 	if client.HTTPClient == nil || text == "login" {
 		return ctx.getLoginSlackMessage()
@@ -102,6 +157,12 @@ func (ctx *Context) getSlackMessage(text string) (*slack.Msg, error) {
 	timeTable, err := client.GetTimeTable()
 	if err != nil {
 		return ctx.getLoginSlackMessage()
+	}
+	if text == "channel" {
+		if ctx.getSlackAccessTokenForUser() == "" {
+			return ctx.getAuthenticateSlackMessage(team)
+		}
+		return ctx.getChannelSelectSlackMessage()
 	}
 	if timeTable.IsLeaving() {
 		return &slack.Msg{

@@ -9,32 +9,40 @@ import (
 
 // Context in request
 type Context struct {
-	RedisConn              redis.Conn
-	Request                *http.Request
-	ClientSecret           string
-	ClientID               string
-	UserID                 string
-	StateStoreKey          string
-	TokenStoreKey          string
-	TeamSpiritHost         string
-	SlackVerificationToken string
-	TimeoutDuration        time.Duration
-	TimeTableClient        *timeTableClient
-	randomString           func(len int) string
+	RedisConn               redis.Conn
+	Request                 *http.Request
+	SalesforceClientSecret  string
+	SalesforceClientID      string
+	SlackClientSecret       string
+	SlackClientID           string
+	UserID                  string
+	StateStoreKey           string
+	SalesforceTokenStoreKey string
+	SlackTokenStoreKey      string
+	NotifyChannelStoreKey   string
+	TeamSpiritHost          string
+	SlackVerificationToken  string
+	TimeoutDuration         time.Duration
+	TimeTableClient         *timeTableClient
+	randomString            func(len int) string
 }
 
 func (app *App) createContext(r *http.Request) *Context {
 	return &Context{
-		RedisConn:              app.RedisConn,
-		ClientID:               app.ClientID,
-		ClientSecret:           app.ClientSecret,
-		StateStoreKey:          app.StateStoreKey,
-		TokenStoreKey:          app.TokenStoreKey,
-		TeamSpiritHost:         app.TeamSpiritHost,
-		SlackVerificationToken: app.SlackVerificationToken,
-		TimeoutDuration:        app.TimeoutDuration,
-		Request:                r,
-		randomString:           randomString,
+		RedisConn:               app.RedisConn,
+		SalesforceClientID:      app.SalesforceClientID,
+		SalesforceClientSecret:  app.SalesforceClientSecret,
+		SlackClientID:           app.SlackClientID,
+		SlackClientSecret:       app.SlackVerificationToken,
+		StateStoreKey:           app.StateStoreKey,
+		SalesforceTokenStoreKey: app.SalesforceTokenStoreKey,
+		SlackTokenStoreKey:      app.SlackTokenStoreKey,
+		NotifyChannelStoreKey:   app.NotifyChannelStoreKey,
+		TeamSpiritHost:          app.TeamSpiritHost,
+		SlackVerificationToken:  app.SlackVerificationToken,
+		TimeoutDuration:         app.TimeoutDuration,
+		Request:                 r,
+		randomString:            randomString,
 	}
 }
 
@@ -47,4 +55,9 @@ func (ctx *Context) getVariableInHash(hashKey string, key string) string {
 		return string(data)
 	}
 	return ""
+}
+
+func (ctx *Context) setVariableInHash(hashKey string, value interface{}) error {
+	_, err := redis.Bool(ctx.RedisConn.Do("HSET", hashKey, ctx.UserID, value))
+	return err
 }

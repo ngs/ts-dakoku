@@ -13,14 +13,14 @@ func TestGetOAuthCallbackURL(t *testing.T) {
 	app := createMockApp()
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/test", nil)
 	ctx := app.createContext(req)
-	Test{"https://example.com/oauth/callback", ctx.getOAuthCallbackURL()}.Compare(t)
+	Test{"https://example.com/oauth/salesforce/callback", ctx.getSalesforceOAuthCallbackURL()}.Compare(t)
 }
 
 func TestGetAuthenticateURL(t *testing.T) {
 	app := createMockApp()
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/test", nil)
 	ctx := app.createContext(req)
-	Test{"https://example.com/oauth/authenticate/foo", ctx.getAuthenticateURL("foo")}.Compare(t)
+	Test{"https://example.com/oauth/salesforce/authenticate/foo", ctx.getSalesforceAuthenticateURL("foo")}.Compare(t)
 }
 
 func TestSetAndGetAccessToken(t *testing.T) {
@@ -35,9 +35,9 @@ func TestSetAndGetAccessToken(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/test", nil)
 	ctx := app.createContext(req)
 	ctx.UserID = "FOO"
-	err := ctx.setAccessToken(token)
+	err := ctx.setSalesforceAccessToken(token)
 	Test{false, err != nil}.Compare(t)
-	token = ctx.getAccessTokenForUser()
+	token = ctx.getSalesforceAccessTokenForUser()
 	for _, test := range []Test{
 		{"foo", token.AccessToken},
 		{"bar", token.RefreshToken},
@@ -47,7 +47,7 @@ func TestSetAndGetAccessToken(t *testing.T) {
 	}
 	ctx = app.createContext(req)
 	ctx.UserID = "BAR"
-	token = ctx.getAccessTokenForUser()
+	token = ctx.getSalesforceAccessTokenForUser()
 	Test{true, token == nil}.Compare(t)
 }
 
@@ -77,8 +77,8 @@ func TestSetAndGetOAuthClient(t *testing.T) {
 	ctx := app.createContext(req)
 	ctx.UserID = "FOO"
 	ctx.TimeoutDuration = 2 * time.Hour
-	err := ctx.setAccessToken(token)
-	token = ctx.getAccessTokenForUser()
+	err := ctx.setSalesforceAccessToken(token)
+	token = ctx.getSalesforceAccessTokenForUser()
 	for _, test := range []Test{
 		{false, token == nil},
 		{oldExpiry.String(), token.Expiry.String()},
@@ -90,8 +90,8 @@ func TestSetAndGetOAuthClient(t *testing.T) {
 	} {
 		test.Compare(t)
 	}
-	client := ctx.getOAuth2Client()
-	token = ctx.getAccessTokenForUser()
+	client := ctx.getSalesforceOAuth2Client()
+	token = ctx.getSalesforceAccessTokenForUser()
 	for _, test := range []Test{
 		{false, client == nil},
 		{newExpiry.String(), token.Expiry.String()},
