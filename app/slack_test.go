@@ -145,8 +145,8 @@ func testGetActionCallbackWithActionType(t *testing.T, actionType string, succes
 }
 
 func TestGetActionCallback(t *testing.T) {
-	testGetActionCallbackWithActionType(t, actionTypeAttend, "出社しました :office:")
-	testGetActionCallbackWithActionType(t, actionTypeLeave, "退社しました :house:")
+	testGetActionCallbackWithActionType(t, actionTypeAttend, "出勤しました :office:")
+	testGetActionCallbackWithActionType(t, actionTypeLeave, "退勤しました :house:")
 	testGetActionCallbackWithActionType(t, actionTypeRest, "休憩を開始しました :coffee:")
 	testGetActionCallbackWithActionType(t, actionTypeUnrest, "休憩を終了しました :computer:")
 }
@@ -220,7 +220,7 @@ func TestGetSlackMessage(t *testing.T) {
 	msg, err = ctx.getSlackMessage("T12345678", "")
 	for _, test := range []Test{
 		{true, err == nil},
-		{"既に退社済です。打刻修正は <https://teamspirit-1234.cloudforce.test|TeamSpirit> で行なってください。", msg.Text},
+		{"既に退勤済です。打刻修正は <https://teamspirit-1234.cloudforce.test|TeamSpirit> で行なってください。", msg.Text},
 		{true, gock.IsDone()},
 	} {
 		test.Compare(t)
@@ -263,7 +263,7 @@ func TestGetSlackMessage(t *testing.T) {
 		{true, err == nil},
 		{"休憩を開始する", msg.Attachments[0].Actions[0].Text},
 		{actionTypeRest, msg.Attachments[0].Actions[0].Name},
-		{"退社する", msg.Attachments[0].Actions[1].Text},
+		{"退勤する", msg.Attachments[0].Actions[1].Text},
 		{actionTypeLeave, msg.Attachments[0].Actions[1].Name},
 		{true, gock.IsDone()},
 	} {
@@ -277,7 +277,7 @@ func TestGetSlackMessage(t *testing.T) {
 	msg, err = ctx.getSlackMessage("T12345678", "")
 	for _, test := range []Test{
 		{true, err == nil},
-		{"出社する", msg.Attachments[0].Actions[0].Text},
+		{"出勤する", msg.Attachments[0].Actions[0].Text},
 		{actionTypeAttend, msg.Attachments[0].Actions[0].Name},
 		{true, gock.IsDone()},
 	} {

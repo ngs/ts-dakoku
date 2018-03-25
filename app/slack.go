@@ -33,7 +33,7 @@ func (ctx *Context) getActionCallback(data *slack.AttachmentActionCallback) (*sl
 	case actionTypeLeave:
 		{
 			attendance = 0
-			text = "退社しました :house:"
+			text = "退勤しました :house:"
 		}
 	case actionTypeRest:
 		{
@@ -48,7 +48,7 @@ func (ctx *Context) getActionCallback(data *slack.AttachmentActionCallback) (*sl
 	case actionTypeAttend:
 		{
 			attendance = 1
-			text = "出社しました :office:"
+			text = "出勤しました :office:"
 		}
 	}
 
@@ -167,7 +167,7 @@ func (ctx *Context) getSlackMessage(team, text string) (*slack.Msg, error) {
 	}
 	if timeTable.IsLeaving() {
 		return &slack.Msg{
-			Text: "既に退社済です。打刻修正は <https://" + ctx.TeamSpiritHost + "|TeamSpirit> で行なってください。",
+			Text: "既に退勤済です。打刻修正は <https://" + ctx.TeamSpiritHost + "|TeamSpirit> で行なってください。",
 		}, nil
 	}
 	if timeTable.IsHoliday != nil && *timeTable.IsHoliday == true {
@@ -209,11 +209,11 @@ func (ctx *Context) getSlackMessage(team, text string) (*slack.Msg, error) {
 						slack.AttachmentAction{
 							Name:  actionTypeLeave,
 							Value: actionTypeLeave,
-							Text:  "退社する",
+							Text:  "退勤する",
 							Style: "danger",
 							Type:  "button",
 							Confirm: &slack.ConfirmationField{
-								Text:        "退社しますか？",
+								Text:        "退勤しますか？",
 								OkText:      "はい",
 								DismissText: "いいえ",
 							},
@@ -231,7 +231,7 @@ func (ctx *Context) getSlackMessage(team, text string) (*slack.Msg, error) {
 					slack.AttachmentAction{
 						Name:  actionTypeAttend,
 						Value: actionTypeAttend,
-						Text:  "出社する",
+						Text:  "出勤する",
 						Style: "primary",
 						Type:  "button",
 					},
