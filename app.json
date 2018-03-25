@@ -1,18 +1,20 @@
 {
   "name": "TS-Dakoku",
   "description": "Slack のコマンドで TeamSpirit の打刻をします",
-  "keywords": [
-    "work",
-    "go",
-    "teamspirit",
-    "salesforce"
-  ],
+  "keywords": ["work", "go", "teamspirit", "salesforce"],
   "env": {
     "SALESFORCE_CLIENT_ID": {
-      "description": "接続アプリケーションのコンシューマ鍵。SalesForce の設定より ビルド > 作成 > アプリケーション 画面より追加します"
+      "description":
+        "接続アプリケーションのコンシューマ鍵。SalesForce の設定より ビルド > 作成 > アプリケーション 画面より追加します"
     },
     "SALESFORCE_CLIENT_SECRET": {
       "description": "接続アプリケーションのコンシューマ秘密鍵"
+    },
+    "SLACK_CLIENT_ID": {
+      "description": "Slack のコンシューマ鍵"
+    },
+    "SLACK_CLIENT_SECRET": {
+      "description": "Slack のコンシューマ秘密鍵"
     },
     "SLACK_VERIFICATION_TOKEN": {
       "description": "Slack アプリケーション の Verification Token"
