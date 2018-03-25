@@ -15,30 +15,42 @@ import (
 
 // App main appplication
 type App struct {
-	Port                   int
-	ClientSecret           string
-	ClientID               string
-	SlackVerificationToken string
-	StateStoreKey          string
-	TokenStoreKey          string
-	TeamSpiritHost         string
-	RedisConn              redis.Conn
-	TimeoutDuration        time.Duration
+	Port                    int
+	SalesforceClientSecret  string
+	SalesforceClientID      string
+	SlackClientSecret       string
+	SlackClientID           string
+	SlackVerificationToken  string
+	StateStoreKey           string
+	SalesforceTokenStoreKey string
+	SlackTokenStoreKey      string
+	NotifyChannelStoreKey   string
+	TeamSpiritHost          string
+	RedisConn               redis.Conn
+	TimeoutDuration         time.Duration
 }
 
 // New Returns new app
 func new() (*App, error) {
 	app := &App{}
-	clientSecret := os.Getenv("SALESFORCE_CLIENT_SECRET")
-	clientID := os.Getenv("SALESFORCE_CLIENT_ID")
+	salesforceClientSecret := os.Getenv("SALESFORCE_CLIENT_SECRET")
+	salesforceClientID := os.Getenv("SALESFORCE_CLIENT_ID")
+	slackClientSecret := os.Getenv("SLACK_CLIENT_SECRET")
+	slackClientID := os.Getenv("SLACK_CLIENT_ID")
 	slackVerificationToken := os.Getenv("SLACK_VERIFICATION_TOKEN")
 	teamSpilitHost := os.Getenv("TEAMSPIRIT_HOST")
 	var errVars = []string{}
-	if clientSecret == "" {
+	if salesforceClientSecret == "" {
 		errVars = append(errVars, "SALESFORCE_CLIENT_SECRET")
 	}
-	if clientID == "" {
+	if salesforceClientID == "" {
 		errVars = append(errVars, "SALESFORCE_CLIENT_ID")
+	}
+	if slackClientSecret == "" {
+		errVars = append(errVars, "SLACK_CLIENT_SECRET")
+	}
+	if slackClientID == "" {
+		errVars = append(errVars, "SLACK_CLIENT_ID")
 	}
 	if slackVerificationToken == "" {
 		errVars = append(errVars, "SLACK_VERIFICATION_TOKEN")
@@ -57,9 +69,21 @@ func new() (*App, error) {
 	}
 
 	if k := os.Getenv("OAUTH_TOKEN_STORE_KEY"); k != "" {
-		app.TokenStoreKey = k
+		app.SalesforceTokenStoreKey = k
 	} else {
-		app.TokenStoreKey = "tsdakoku:oauth_tokens"
+		app.SalesforceTokenStoreKey = "tsdakoku:oauth_tokens"
+	}
+
+	if k := os.Getenv("SLACK_TOKEN_STORE_KEY"); k != "" {
+		app.SlackTokenStoreKey = k
+	} else {
+		app.SlackTokenStoreKey = "tsdakoku:slack_tokens"
+	}
+
+	if k := os.Getenv("SLACK_NOTIFY_CHANNEL_STORE_KEY"); k != "" {
+		app.NotifyChannelStoreKey = k
+	} else {
+		app.NotifyChannelStoreKey = "tsdakoku:notify_channels"
 	}
 
 	duration, _ := strconv.Atoi(os.Getenv("SALESFORCE_TIMEOUT_MINUTES"))
@@ -69,8 +93,10 @@ func new() (*App, error) {
 		app.TimeoutDuration = time.Hour
 	}
 
-	app.ClientID = clientID
-	app.ClientSecret = clientSecret
+	app.SalesforceClientID = salesforceClientID
+	app.SalesforceClientSecret = salesforceClientSecret
+	app.SlackClientID = slackClientID
+	app.SlackClientSecret = slackClientSecret
 	app.SlackVerificationToken = slackVerificationToken
 	app.TeamSpiritHost = teamSpilitHost
 	if err := app.setupRedis(); err != nil {

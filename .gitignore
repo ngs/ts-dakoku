@@ -6,3 +6,4 @@ apex/Referenced Packages
 apex/**/*.zip
 coverage/*
 lcov.info
+.sfdx/tools/apex.db

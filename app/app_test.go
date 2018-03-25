@@ -8,8 +8,10 @@ import (
 )
 
 func (app *App) CleanRedis() {
-	app.RedisConn.Do("DEL", app.TokenStoreKey)
+	app.RedisConn.Do("DEL", app.SalesforceTokenStoreKey)
 	app.RedisConn.Do("DEL", app.StateStoreKey)
+	app.RedisConn.Do("DEL", app.SlackTokenStoreKey)
+	app.RedisConn.Do("DEL", app.NotifyChannelStoreKey)
 }
 
 func createMockApp() *App {
@@ -31,6 +33,8 @@ func TestNewApp(t *testing.T) {
 	for _, name := range []string{
 		"SALESFORCE_CLIENT_SECRET",
 		"SALESFORCE_CLIENT_ID",
+		"SLACK_CLIENT_SECRET",
+		"SLACK_CLIENT_ID",
 		"SLACK_VERIFICATION_TOKEN",
 		"TEAMSPIRIT_HOST",
 		"OAUTH_TOKEN_STORE_KEY",
@@ -41,13 +45,15 @@ func TestNewApp(t *testing.T) {
 	app, err := new()
 	for _, test := range []Test{
 		{false, app == nil},
-		{"SALESFORCE_CLIENT_SECRET, SALESFORCE_CLIENT_ID, SLACK_VERIFICATION_TOKEN, TEAMSPIRIT_HOST are not configured", err.Error()},
+		{"SALESFORCE_CLIENT_SECRET, SALESFORCE_CLIENT_ID, SLACK_CLIENT_SECRET, SLACK_CLIENT_ID, SLACK_VERIFICATION_TOKEN, TEAMSPIRIT_HOST are not configured", err.Error()},
 	} {
 		test.Compare(t)
 	}
 	for _, name := range []string{
 		"SALESFORCE_CLIENT_SECRET",
 		"SALESFORCE_CLIENT_ID",
+		"SLACK_CLIENT_SECRET",
+		"SLACK_CLIENT_ID",
 		"SLACK_VERIFICATION_TOKEN",
 		"TEAMSPIRIT_HOST",
 	} {
@@ -58,20 +64,24 @@ func TestNewApp(t *testing.T) {
 		{false, app == nil},
 		{true, err == nil},
 		{"tsdakoku:states", app.StateStoreKey},
-		{"tsdakoku:oauth_tokens", app.TokenStoreKey},
+		{"tsdakoku:oauth_tokens", app.SalesforceTokenStoreKey},
 		{time.Hour, app.TimeoutDuration},
 	} {
 		test.Compare(t)
 	}
 	os.Setenv("STATE_STORE_KEY", "tsdakoku-test:states")
 	os.Setenv("OAUTH_TOKEN_STORE_KEY", "tsdakoku-test:oauth_tokens")
+	os.Setenv("SLACK_TOKEN_STORE_KEY", "tsdakoku-test:slack_tokens")
+	os.Setenv("SLACK_NOTIFY_CHANNEL_STORE_KEY", "tsdakoku-test:notify_channels")
 	os.Setenv("SALESFORCE_TIMEOUT_MINUTES", "20")
 	app, err = new()
 	for _, test := range []Test{
 		{false, app == nil},
 		{true, err == nil},
 		{"tsdakoku-test:states", app.StateStoreKey},
-		{"tsdakoku-test:oauth_tokens", app.TokenStoreKey},
+		{"tsdakoku-test:oauth_tokens", app.SalesforceTokenStoreKey},
+		{"tsdakoku-test:slack_tokens", app.SlackTokenStoreKey},
+		{"tsdakoku-test:notify_channels", app.NotifyChannelStoreKey},
 		{20 * time.Minute, app.TimeoutDuration},
 	} {
 		test.Compare(t)

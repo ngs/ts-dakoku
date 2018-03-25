@@ -12,10 +12,10 @@ func TestCreateContext(t *testing.T) {
 
 	for _, test := range []Test{
 		{false, ctx.RedisConn == nil},
-		{"SALESFORCE_CLIENT_ID is set!", ctx.ClientID},
-		{"SALESFORCE_CLIENT_SECRET is set!", ctx.ClientSecret},
+		{"SALESFORCE_CLIENT_ID is set!", ctx.SalesforceClientID},
+		{"SALESFORCE_CLIENT_SECRET is set!", ctx.SalesforceClientSecret},
 		{"tsdakoku-test:states", ctx.StateStoreKey},
-		{"tsdakoku-test:oauth_tokens", ctx.TokenStoreKey},
+		{"tsdakoku-test:oauth_tokens", ctx.SalesforceTokenStoreKey},
 		{"teamspirit-1234.cloudforce.test", ctx.TeamSpiritHost},
 		{"SLACK_VERIFICATION_TOKEN is set!", ctx.SlackVerificationToken},
 		{req, ctx.Request},
