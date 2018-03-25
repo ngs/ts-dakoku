@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	slack "github.com/ngs/go-slack"
+	slack "github.com/nlopes/slack"
 	"golang.org/x/oauth2"
 	gock "gopkg.in/h2non/gock.v1"
 )
