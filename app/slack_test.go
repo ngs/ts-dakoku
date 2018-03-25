@@ -15,9 +15,15 @@ import (
 	gock "gopkg.in/h2non/gock.v1"
 )
 
-func createActionCallbackRequest(actionType string, token string) *http.Request {
+func createActionCallbackRequest(callbackID, actionType, token string) *http.Request {
 	callback := &slack.AttachmentActionCallback{
-		Actions:     []slack.AttachmentAction{{Name: actionType}},
+		CallbackID: callbackID,
+		Actions: []slack.AttachmentAction{{
+			Name: actionType,
+			SelectedOptions: []slack.AttachmentActionOption{
+				{Value: "C1234567"},
+			},
+		}},
 		Token:       token,
 		ResponseURL: "https://hooks.slack.test/coolhook",
 		User: slack.User{
@@ -180,6 +186,30 @@ func TestGetSlackMessage(t *testing.T) {
 		{true, err == nil},
 		{"TeamSpirit で認証を行って、再度 `/ts` コマンドを実行してください :bow:", msg.Attachments[0].Text},
 		{0, strings.Index(msg.Attachments[0].Actions[0].URL, "https://example.com/oauth/salesforce/authenticate/")},
+	} {
+		test.Compare(t)
+	}
+	setupTimeTableGocks([]timeTableItem{
+		{null.IntFrom(10 * 60), null.IntFrom(19 * 60), 1},
+	}, nil)
+	ctx.TimeTableClient = nil
+	msg, err = ctx.getSlackMessage("T12345678", "channel")
+	for _, test := range []Test{
+		{true, err == nil},
+		{"Slack で認証を行って、再度 `/ts channel` コマンドを実行してください :bow:", msg.Attachments[0].Text},
+		{0, strings.Index(msg.Attachments[0].Actions[0].URL, "https://example.com/oauth/slack/authenticate/T12345678/")},
+	} {
+		test.Compare(t)
+	}
+	setupTimeTableGocks([]timeTableItem{
+		{null.IntFrom(10 * 60), null.IntFrom(19 * 60), 1},
+	}, nil)
+	ctx.TimeTableClient = nil
+	ctx.setSlackAccessToken("foo")
+	msg, err = ctx.getSlackMessage("T12345678", "channel")
+	for _, test := range []Test{
+		{true, err == nil},
+		{"打刻時に通知するチャネルを選択して下さい", msg.Attachments[0].Text},
 	} {
 		test.Compare(t)
 	}

@@ -163,11 +163,11 @@ func (app *App) handleActionCallback(w http.ResponseWriter, r *http.Request) {
 	if data.CallbackID == callbackIDChannelSelect {
 		action := data.Actions[0]
 		channelID := ""
-		text := "通知を止めました"
+		text := "通知を止めました :no_bell:"
 		if action.Name == actionTypeSelectChannel {
 			opt := action.SelectedOptions[0]
 			channelID = opt.Value
-			text = "<#" + channelID + "> に通知します"
+			text = "<#" + channelID + "> に通知します :mega:"
 		}
 		ctx.setVariableInHash(ctx.NotifyChannelStoreKey, channelID)
 		w.Header().Set("Content-Type", "text/plain")
@@ -192,5 +192,5 @@ func (app *App) handleActionCallback(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte("勤務表を更新中"))
+	w.Write([]byte("勤務表を更新中 :hourglass_flowing_sand:"))
 }

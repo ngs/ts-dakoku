@@ -327,7 +327,7 @@ func TestHandleActionCallback(t *testing.T) {
 	app.CleanRedis()
 
 	res := httptest.NewRecorder()
-	req := createActionCallbackRequest(actionTypeAttend, "foo")
+	req := createActionCallbackRequest(callbackIDAttendanceButton, actionTypeAttend, "foo")
 	app.setupRouter().ServeHTTP(res, req)
 	for _, test := range []Test{
 		{401, res.Code},
@@ -369,7 +369,7 @@ func TestHandleActionCallback(t *testing.T) {
 
 	app.CleanRedis()
 	res = httptest.NewRecorder()
-	req = createActionCallbackRequest(actionTypeAttend, app.SlackVerificationToken)
+	req = createActionCallbackRequest(callbackIDAttendanceButton, actionTypeAttend, app.SlackVerificationToken)
 	ctx := app.createContext(req)
 	ctx.UserID = "FOO"
 	ctx.setSalesforceAccessToken(&oauth2.Token{
@@ -382,7 +382,49 @@ func TestHandleActionCallback(t *testing.T) {
 	time.Sleep(time.Second)
 	for _, test := range []Test{
 		{200, res.Code},
-		{"勤務表を更新中", res.Body.String()},
+		{"勤務表を更新中 :hourglass_flowing_sand:", res.Body.String()},
+		{true, gock.IsDone()},
+	} {
+		test.Compare(t)
+	}
+
+	app.CleanRedis()
+	res = httptest.NewRecorder()
+	req = createActionCallbackRequest(callbackIDChannelSelect, actionTypeSelectChannel, app.SlackVerificationToken)
+	ctx = app.createContext(req)
+	ctx.UserID = "FOO"
+	ctx.setSalesforceAccessToken(&oauth2.Token{
+		AccessToken:  "foo",
+		RefreshToken: "bar",
+		TokenType:    "Bearer",
+	})
+
+	app.setupRouter().ServeHTTP(res, req)
+	time.Sleep(time.Second)
+	for _, test := range []Test{
+		{200, res.Code},
+		{"<#C1234567> に通知します :mega:", res.Body.String()},
+		{true, gock.IsDone()},
+	} {
+		test.Compare(t)
+	}
+
+	app.CleanRedis()
+	res = httptest.NewRecorder()
+	req = createActionCallbackRequest(callbackIDChannelSelect, actionTypeUnselectChannel, app.SlackVerificationToken)
+	ctx = app.createContext(req)
+	ctx.UserID = "FOO"
+	ctx.setSalesforceAccessToken(&oauth2.Token{
+		AccessToken:  "foo",
+		RefreshToken: "bar",
+		TokenType:    "Bearer",
+	})
+
+	app.setupRouter().ServeHTTP(res, req)
+	time.Sleep(time.Second)
+	for _, test := range []Test{
+		{200, res.Code},
+		{"通知を止めました :no_bell:", res.Body.String()},
 		{true, gock.IsDone()},
 	} {
 		test.Compare(t)

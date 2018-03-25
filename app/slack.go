@@ -7,13 +7,14 @@ import (
 )
 
 const (
-	actionTypeAttend          = "attend"
-	actionTypeRest            = "rest"
-	actionTypeUnrest          = "unrest"
-	actionTypeLeave           = "leave"
-	actionTypeSelectChannel   = "select-channel"
-	actionTypeUnselectChannel = "unselect-channel"
-	callbackIDChannelSelect   = "slack_channel_select_button"
+	actionTypeAttend           = "attend"
+	actionTypeRest             = "rest"
+	actionTypeUnrest           = "unrest"
+	actionTypeLeave            = "leave"
+	actionTypeSelectChannel    = "select-channel"
+	actionTypeUnselectChannel  = "unselect-channel"
+	callbackIDChannelSelect    = "slack_channel_select_button"
+	callbackIDAttendanceButton = "attendance_button"
 )
 
 func (ctx *Context) getActionCallback(data *slack.AttachmentActionCallback) (*slack.Msg, string, error) {
@@ -81,7 +82,7 @@ func (ctx *Context) getLoginSlackMessage() (*slack.Msg, error) {
 		Attachments: []slack.Attachment{
 			slack.Attachment{
 				Text:       "TeamSpirit で認証を行って、再度 `/ts` コマンドを実行してください :bow:",
-				CallbackID: "authentication_button",
+				CallbackID: callbackIDAttendanceButton,
 				Actions: []slack.AttachmentAction{
 					slack.AttachmentAction{
 						Name:  "authenticate",
@@ -178,7 +179,7 @@ func (ctx *Context) getSlackMessage(team, text string) (*slack.Msg, error) {
 		return &slack.Msg{
 			Attachments: []slack.Attachment{
 				slack.Attachment{
-					CallbackID: "attendance_button",
+					CallbackID: callbackIDAttendanceButton,
 					Actions: []slack.AttachmentAction{
 						slack.AttachmentAction{
 							Name:  actionTypeUnrest,
@@ -196,7 +197,7 @@ func (ctx *Context) getSlackMessage(team, text string) (*slack.Msg, error) {
 		return &slack.Msg{
 			Attachments: []slack.Attachment{
 				slack.Attachment{
-					CallbackID: "attendance_button",
+					CallbackID: callbackIDAttendanceButton,
 					Actions: []slack.AttachmentAction{
 						slack.AttachmentAction{
 							Name:  actionTypeRest,
@@ -225,7 +226,7 @@ func (ctx *Context) getSlackMessage(team, text string) (*slack.Msg, error) {
 	return &slack.Msg{
 		Attachments: []slack.Attachment{
 			slack.Attachment{
-				CallbackID: "attendance_button",
+				CallbackID: callbackIDAttendanceButton,
 				Actions: []slack.AttachmentAction{
 					slack.AttachmentAction{
 						Name:  actionTypeAttend,
