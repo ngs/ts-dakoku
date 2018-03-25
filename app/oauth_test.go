@@ -9,21 +9,35 @@ import (
 	gock "gopkg.in/h2non/gock.v1"
 )
 
-func TestGetOAuthCallbackURL(t *testing.T) {
+func TestGetSalesforceOAuthCallbackURL(t *testing.T) {
 	app := createMockApp()
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/test", nil)
 	ctx := app.createContext(req)
 	Test{"https://example.com/oauth/salesforce/callback", ctx.getSalesforceOAuthCallbackURL()}.Compare(t)
 }
 
-func TestGetAuthenticateURL(t *testing.T) {
+func TestGetSalesforceAuthenticateURL(t *testing.T) {
 	app := createMockApp()
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/test", nil)
 	ctx := app.createContext(req)
 	Test{"https://example.com/oauth/salesforce/authenticate/foo", ctx.getSalesforceAuthenticateURL("foo")}.Compare(t)
 }
 
-func TestSetAndGetAccessToken(t *testing.T) {
+func TestGetSlackOAuthCallbackURL(t *testing.T) {
+	app := createMockApp()
+	req, _ := http.NewRequest(http.MethodGet, "https://example.com/test", nil)
+	ctx := app.createContext(req)
+	Test{"https://example.com/oauth/slack/callback", ctx.getSlackOAuthCallbackURL()}.Compare(t)
+}
+
+func TestGetSlackeAuthenticateURL(t *testing.T) {
+	app := createMockApp()
+	req, _ := http.NewRequest(http.MethodGet, "https://example.com/test", nil)
+	ctx := app.createContext(req)
+	Test{"https://example.com/oauth/slack/authenticate/foo/bar", ctx.getSlackAuthenticateURL("foo", "bar")}.Compare(t)
+}
+
+func TestSetAndGetSalesforceAccessToken(t *testing.T) {
 	token := &oauth2.Token{
 		AccessToken:  "foo",
 		RefreshToken: "bar",
@@ -49,6 +63,22 @@ func TestSetAndGetAccessToken(t *testing.T) {
 	ctx.UserID = "BAR"
 	token = ctx.getSalesforceAccessTokenForUser()
 	Test{true, token == nil}.Compare(t)
+}
+
+func TestSetAndGetSlackAccessToken(t *testing.T) {
+	app := createMockApp()
+	app.CleanRedis()
+	req, _ := http.NewRequest(http.MethodGet, "https://example.com/test", nil)
+	ctx := app.createContext(req)
+	ctx.UserID = "FOO"
+	err := ctx.setSlackAccessToken("foo")
+	Test{false, err != nil}.Compare(t)
+	token := ctx.getSlackAccessTokenForUser()
+	Test{"foo", token}.Compare(t)
+	ctx = app.createContext(req)
+	ctx.UserID = "BAR"
+	token = ctx.getSlackAccessTokenForUser()
+	Test{"", token}.Compare(t)
 }
 
 func TestSetAndGetOAuthClient(t *testing.T) {
