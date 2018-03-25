@@ -75,10 +75,11 @@ func (ctx *Context) getSalesforceAccessTokenForUser() *oauth2.Token {
 }
 
 func (ctx *Context) getSlackAccessTokenForUser() string {
-	if ctx.UserID == "" {
-		return ""
-	}
 	return ctx.getVariableInHash(ctx.SlackTokenStoreKey, ctx.UserID)
+}
+
+func (ctx *Context) getSlackNotifyChannelForUser() string {
+	return ctx.getVariableInHash(ctx.NotifyChannelStoreKey, ctx.UserID)
 }
 
 func (ctx *Context) getSalesforceAccessToken(code string, state string) (*oauth2.Token, error) {

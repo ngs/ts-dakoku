@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	slack "github.com/ngs/go-slack"
 	"golang.org/x/oauth2"
 	gock "gopkg.in/h2non/gock.v1"
 )
@@ -92,7 +93,7 @@ func TestHandleFavicon(t *testing.T) {
 	}
 }
 
-func TestHandleAuthenticate(t *testing.T) {
+func TestHandleSalesforceAuthenticate(t *testing.T) {
 	app := createMockApp()
 	app.CleanRedis()
 	res := httptest.NewRecorder()
@@ -110,7 +111,25 @@ func TestHandleAuthenticate(t *testing.T) {
 	}
 }
 
-func TestHandleAuthenticateNotFound(t *testing.T) {
+func TestHandleSlackAuthenticate(t *testing.T) {
+	app := createMockApp()
+	app.CleanRedis()
+	res := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "https://example.com/oauth/slack/authenticate/", nil)
+	ctx := app.createContext(req)
+	ctx.UserID = "FOO"
+	state, _ := ctx.storeUserIDInState()
+	req, _ = http.NewRequest(http.MethodGet, "https://example.com/oauth/slack/authenticate/T12345678/"+state, nil)
+	app.setupRouter().ServeHTTP(res, req)
+	for _, test := range []Test{
+		{303, res.Code},
+		{"https://slack.com/oauth/authorize?client_id=ok&redirect_uri=https%3A%2F%2Fexample.com%2Foauth%2Fslack%2Fcallback&scope=chat%3Awrite%3Auser&state=" + state + "&team=T12345678", res.Header().Get("Location")},
+	} {
+		test.Compare(t)
+	}
+}
+
+func TestHandleSalesforceAuthenticateNotFound(t *testing.T) {
 	app := createMockApp()
 	app.CleanRedis()
 	res := httptest.NewRecorder()
@@ -125,7 +144,22 @@ func TestHandleAuthenticateNotFound(t *testing.T) {
 	}
 }
 
-func TestHandleOAuthCallback(t *testing.T) {
+func TestHandleSlackAuthenticateNotFound(t *testing.T) {
+	app := createMockApp()
+	app.CleanRedis()
+	res := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "https://example.com/oauth/slack/authenticate/T12345678/foo", nil)
+	ctx := app.createContext(req)
+	ctx.UserID = "FOO"
+	app.setupRouter().ServeHTTP(res, req)
+	for _, test := range []Test{
+		{404, res.Code},
+	} {
+		test.Compare(t)
+	}
+}
+
+func TestHandleSalesforceOAuthCallback(t *testing.T) {
 	defer gock.Off()
 	expiry, _ := time.Parse("2016-01-02T15:04:05Z", "0001-01-01T00:00:00Z")
 	gock.New("https://login.salesforce.com").
@@ -161,7 +195,7 @@ func TestHandleOAuthCallback(t *testing.T) {
 	}
 }
 
-func TestHandleOAuthCallbackError(t *testing.T) {
+func TestHandleSalesforceOAuthCallbackError(t *testing.T) {
 	defer gock.Off()
 	gock.New("https://login.salesforce.com").
 		Post("/services/oauth2/token").
@@ -179,6 +213,75 @@ func TestHandleOAuthCallbackError(t *testing.T) {
 	app.setupRouter().ServeHTTP(res, req)
 	for _, test := range []Test{
 		{500, res.Code},
+	} {
+		test.Compare(t)
+	}
+}
+
+func TestHandleSlackOAuthCallback(t *testing.T) {
+	defer gock.Off()
+	defer gock.RestoreClient(slack.HTTPClient)
+	gock.New("https://slack.com").
+		Post("/api/oauth.access").
+		Reply(200).
+		JSON(slack.OAuthResponse{
+			SlackResponse: slack.SlackResponse{Ok: true},
+			AccessToken:   "yo",
+		})
+	client := &http.Client{Transport: &http.Transport{}}
+	gock.InterceptClient(client)
+	slack.SetHTTPClient(client)
+	app := createMockApp()
+	app.CleanRedis()
+	res := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "https://example.com/", nil)
+	ctx := app.createContext(req)
+	ctx.UserID = "FOO"
+	state, _ := ctx.storeUserIDInState()
+	token := ctx.getSlackAccessTokenForUser()
+	Test{"", token}.Compare(t)
+	req, _ = http.NewRequest(http.MethodGet, "https://example.com/oauth/slack/callback?state="+state+"&code=fjkfjk", nil)
+	app.setupRouter().ServeHTTP(res, req)
+	token = ctx.getSlackAccessTokenForUser()
+	for _, test := range []Test{
+		{302, res.Code},
+		{"yo", token},
+		{"/success", res.Header().Get("Location")},
+	} {
+		test.Compare(t)
+	}
+}
+
+func TestHandleSlackOAuthCallbackError(t *testing.T) {
+	defer gock.Off()
+	defer gock.RestoreClient(slack.HTTPClient)
+	gock.New("https://slack.com").
+		Post("/api/oauth.access").
+		Reply(200).
+		JSON(slack.OAuthResponse{
+			SlackResponse: slack.SlackResponse{
+				Ok:    false,
+				Error: "omg",
+			},
+		})
+	client := &http.Client{Transport: &http.Transport{}}
+	gock.InterceptClient(client)
+	slack.SetHTTPClient(client)
+	app := createMockApp()
+	app.CleanRedis()
+	res := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "https://example.com/", nil)
+	ctx := app.createContext(req)
+	ctx.UserID = "FOO"
+	state, _ := ctx.storeUserIDInState()
+	token := ctx.getSlackAccessTokenForUser()
+	Test{"", token}.Compare(t)
+	req, _ = http.NewRequest(http.MethodGet, "https://example.com/oauth/slack/callback?state="+state+"&code=fjkfjk", nil)
+	app.setupRouter().ServeHTTP(res, req)
+	token = ctx.getSlackAccessTokenForUser()
+	for _, test := range []Test{
+		{500, res.Code},
+		{"omg\n", res.Body.String()},
 	} {
 		test.Compare(t)
 	}

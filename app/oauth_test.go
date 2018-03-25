@@ -48,8 +48,10 @@ func TestSetAndGetSalesforceAccessToken(t *testing.T) {
 	app.CleanRedis()
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/test", nil)
 	ctx := app.createContext(req)
-	ctx.UserID = "FOO"
 	err := ctx.setSalesforceAccessToken(token)
+	Test{true, err != nil}.Compare(t)
+	ctx.UserID = "FOO"
+	err = ctx.setSalesforceAccessToken(token)
 	Test{false, err != nil}.Compare(t)
 	token = ctx.getSalesforceAccessTokenForUser()
 	for _, test := range []Test{
@@ -65,23 +67,7 @@ func TestSetAndGetSalesforceAccessToken(t *testing.T) {
 	Test{true, token == nil}.Compare(t)
 }
 
-func TestSetAndGetSlackAccessToken(t *testing.T) {
-	app := createMockApp()
-	app.CleanRedis()
-	req, _ := http.NewRequest(http.MethodGet, "https://example.com/test", nil)
-	ctx := app.createContext(req)
-	ctx.UserID = "FOO"
-	err := ctx.setSlackAccessToken("foo")
-	Test{false, err != nil}.Compare(t)
-	token := ctx.getSlackAccessTokenForUser()
-	Test{"foo", token}.Compare(t)
-	ctx = app.createContext(req)
-	ctx.UserID = "BAR"
-	token = ctx.getSlackAccessTokenForUser()
-	Test{"", token}.Compare(t)
-}
-
-func TestSetAndGetOAuthClient(t *testing.T) {
+func TestSetAndGetSalesforceOAuthClient(t *testing.T) {
 	defer gock.Off()
 	newExpiry := time.Now().Add(2 * time.Hour).Truncate(time.Second)
 	oldExpiry := time.Now().Add(-10 * time.Hour).Truncate(time.Second)
@@ -131,4 +117,22 @@ func TestSetAndGetOAuthClient(t *testing.T) {
 	} {
 		test.Compare(t)
 	}
+}
+
+func TestSetAndGetSlackAccessToken(t *testing.T) {
+	app := createMockApp()
+	app.CleanRedis()
+	req, _ := http.NewRequest(http.MethodGet, "https://example.com/test", nil)
+	ctx := app.createContext(req)
+	err := ctx.setSlackAccessToken("foo")
+	Test{true, err != nil}.Compare(t)
+	ctx.UserID = "FOO"
+	err = ctx.setSlackAccessToken("foo")
+	Test{false, err != nil}.Compare(t)
+	token := ctx.getSlackAccessTokenForUser()
+	Test{"foo", token}.Compare(t)
+	ctx = app.createContext(req)
+	ctx.UserID = "BAR"
+	token = ctx.getSlackAccessTokenForUser()
+	Test{"", token}.Compare(t)
 }

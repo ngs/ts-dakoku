@@ -74,7 +74,6 @@ func (app *App) handleSlackOAuthCallback(w http.ResponseWriter, r *http.Request)
 	code := r.URL.Query().Get("code")
 	state := r.URL.Query().Get("state")
 	ctx := app.createContext(r)
-	http.Redirect(w, r, "/success", http.StatusFound)
 	redirectURL := ctx.getSlackOAuthCallbackURL()
 	token, _, err := slack.GetOAuthToken(app.SlackClientID, app.SlackClientSecret, code, redirectURL, false)
 	if err != nil {
@@ -84,6 +83,7 @@ func (app *App) handleSlackOAuthCallback(w http.ResponseWriter, r *http.Request)
 	ctx.UserID = ctx.getUserIDForState(state)
 	ctx.setSlackAccessToken(token)
 	ctx.deleteState(state)
+	http.Redirect(w, r, "/success", http.StatusFound)
 }
 
 func (app *App) handleSalesforceAuthenticate(w http.ResponseWriter, r *http.Request) {
@@ -183,7 +183,7 @@ func (app *App) handleActionCallback(w http.ResponseWriter, r *http.Request) {
 			fmt.Printf("Handle Action Callback Error: %+v\n", err.Error())
 		}
 		slackToken := ctx.getSlackAccessTokenForUser()
-		slackChannel := ctx.getVariableInHash(app.NotifyChannelStoreKey, ctx.UserID)
+		slackChannel := ctx.getSlackNotifyChannelForUser()
 		if slackToken != "" && slackChannel != "" {
 			slack.New(slackToken).PostMessage(slackChannel, params.Text, slack.PostMessageParameters{AsUser: true})
 		}
