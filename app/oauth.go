@@ -22,8 +22,8 @@ func (ctx *Context) getSlackOAuthCallbackURL() string {
 	return "https://" + ctx.Request.Host + "/oauth/slack/callback"
 }
 
-func (ctx *Context) getSlackAuthenticateURL(team, state string) string {
-	return "https://" + ctx.Request.Host + "/oauth/slack/authenticate/" + team + "/" + state
+func (ctx *Context) getSlackAuthenticateURL(teamID, state string) string {
+	return "https://" + ctx.Request.Host + "/oauth/slack/authenticate/" + teamID + "/" + state
 }
 
 func (ctx *Context) setSalesforceAccessToken(token *oauth2.Token) error {

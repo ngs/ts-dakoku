@@ -100,7 +100,7 @@ func TestHandleSalesforceAuthenticate(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/oauth/salesforce/authenticate/", nil)
 	ctx := app.createContext(req)
 	ctx.UserID = "FOO"
-	state, _ := ctx.storeUserIDInState()
+	state, _ := ctx.storeUserIDInState("T123456")
 	req, _ = http.NewRequest(http.MethodGet, "https://example.com/oauth/salesforce/authenticate/"+state, nil)
 	app.setupRouter().ServeHTTP(res, req)
 	for _, test := range []Test{
@@ -118,7 +118,7 @@ func TestHandleSlackAuthenticate(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/oauth/slack/authenticate/", nil)
 	ctx := app.createContext(req)
 	ctx.UserID = "FOO"
-	state, _ := ctx.storeUserIDInState()
+	state, _ := ctx.storeUserIDInState("T123456")
 	req, _ = http.NewRequest(http.MethodGet, "https://example.com/oauth/slack/authenticate/T12345678/"+state, nil)
 	app.setupRouter().ServeHTTP(res, req)
 	for _, test := range []Test{
@@ -177,7 +177,7 @@ func TestHandleSalesforceOAuthCallback(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/", nil)
 	ctx := app.createContext(req)
 	ctx.UserID = "FOO"
-	state, _ := ctx.storeUserIDInState()
+	state, _ := ctx.storeUserIDInState("T123456")
 	token := ctx.getSalesforceAccessTokenForUser()
 	Test{true, token == nil}.Compare(t)
 	req, _ = http.NewRequest(http.MethodGet, "https://example.com/oauth/salesforce/callback?state="+state+"&code=fjkfjk", nil)
@@ -189,7 +189,7 @@ func TestHandleSalesforceOAuthCallback(t *testing.T) {
 		{"bar", token.RefreshToken},
 		{"foo", token.AccessToken},
 		{false, token.Expiry.IsZero()},
-		{"/success", res.Header().Get("Location")},
+		{"https://example.com/oauth/slack/authenticate/T123456/" + state, res.Header().Get("Location")},
 	} {
 		test.Compare(t)
 	}
@@ -208,7 +208,7 @@ func TestHandleSalesforceOAuthCallbackError(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/", nil)
 	ctx := app.createContext(req)
 	ctx.UserID = "FOO"
-	state, _ := ctx.storeUserIDInState()
+	state, _ := ctx.storeUserIDInState("T123456")
 	req, _ = http.NewRequest(http.MethodGet, "https://example.com/oauth/salesforce/callback?state="+state+"&code=fjkfjk", nil)
 	app.setupRouter().ServeHTTP(res, req)
 	for _, test := range []Test{
@@ -237,7 +237,7 @@ func TestHandleSlackOAuthCallback(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/", nil)
 	ctx := app.createContext(req)
 	ctx.UserID = "FOO"
-	state, _ := ctx.storeUserIDInState()
+	state, _ := ctx.storeUserIDInState("T123456")
 	token := ctx.getSlackAccessTokenForUser()
 	Test{"", token}.Compare(t)
 	req, _ = http.NewRequest(http.MethodGet, "https://example.com/oauth/slack/callback?state="+state+"&code=fjkfjk", nil)
@@ -273,7 +273,7 @@ func TestHandleSlackOAuthCallbackError(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "https://example.com/", nil)
 	ctx := app.createContext(req)
 	ctx.UserID = "FOO"
-	state, _ := ctx.storeUserIDInState()
+	state, _ := ctx.storeUserIDInState("T123456")
 	token := ctx.getSlackAccessTokenForUser()
 	Test{"", token}.Compare(t)
 	req, _ = http.NewRequest(http.MethodGet, "https://example.com/oauth/slack/callback?state="+state+"&code=fjkfjk", nil)

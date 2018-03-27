@@ -1,16 +1,22 @@
 package app
 
 import (
+	"strings"
+
 	"github.com/garyburd/redigo/redis"
 )
 
 func (ctx *Context) getUserIDForState(state string) string {
-	return ctx.getVariableInHash(ctx.StateStoreKey, state)
+	return strings.Split(ctx.getVariableInHash(ctx.StateStoreKey, state), " ")[0]
 }
 
-func (ctx *Context) storeUserIDInState() (string, error) {
+func (ctx *Context) getTeamIDForState(state string) string {
+	return strings.Split(ctx.getVariableInHash(ctx.StateStoreKey, state), " ")[1]
+}
+
+func (ctx *Context) storeUserIDInState(teamID string) (string, error) {
 	state := ctx.generateState()
-	_, err := redis.Bool(ctx.RedisConn.Do("HSET", ctx.StateStoreKey, state, ctx.UserID))
+	_, err := redis.Bool(ctx.RedisConn.Do("HSET", ctx.StateStoreKey, state, ctx.UserID+" "+teamID))
 	return state, err
 }
 
