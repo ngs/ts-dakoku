@@ -1,23 +1,37 @@
 package app
 
 import (
-	"strings"
+	"encoding/json"
 
 	"github.com/garyburd/redigo/redis"
 )
 
-func (ctx *Context) getUserIDForState(state string) string {
-	return strings.Split(ctx.getVariableInHash(ctx.StateStoreKey, state), " ")[0]
+// State state for authentication
+type State struct {
+	UserID      string `json:"u,omitempty"`
+	TeamID      string `json:"t,omitempty"`
+	ResponseURL string `json:"r,omitempty"`
 }
 
-func (ctx *Context) getTeamIDForState(state string) string {
-	return strings.Split(ctx.getVariableInHash(ctx.StateStoreKey, state), " ")[1]
+func (ctx *Context) getState(state string) *State {
+	res, err := ctx.RedisConn.Do("HGET", ctx.StateStoreKey, state)
+	if err != nil {
+		return nil
+	}
+	if data, ok := res.([]byte); ok {
+		var res State
+		json.Unmarshal(data, &res)
+		return &res
+	}
+	return nil
 }
 
-func (ctx *Context) storeUserIDInState(teamID string) (string, error) {
-	state := ctx.generateState()
-	_, err := redis.Bool(ctx.RedisConn.Do("HSET", ctx.StateStoreKey, state, ctx.UserID+" "+teamID))
-	return state, err
+func (ctx *Context) storeState(state State) (string, error) {
+	state.UserID = ctx.UserID
+	stateKey := ctx.generateState()
+	jsonData, _ := json.Marshal(state)
+	_, err := redis.Bool(ctx.RedisConn.Do("HSET", ctx.StateStoreKey, stateKey, string(jsonData)))
+	return stateKey, err
 }
 
 func (ctx *Context) deleteState(state string) error {

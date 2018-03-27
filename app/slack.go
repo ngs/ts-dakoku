@@ -22,7 +22,12 @@ func (ctx *Context) getActionCallback(data *slack.AttachmentActionCallback) (*sl
 	client := ctx.createTimeTableClient()
 	timeTable, err := client.GetTimeTable()
 	if err != nil {
-		err, msg := ctx.getLoginSlackMessage(data.Team.ID)
+		state := State{
+			TeamID:      data.Team.ID,
+			UserID:      ctx.UserID,
+			ResponseURL: data.ResponseURL,
+		}
+		err, msg := ctx.getLoginSlackMessage(state)
 		return err, data.ResponseURL, msg
 	}
 
@@ -73,8 +78,8 @@ func (ctx *Context) getActionCallback(data *slack.AttachmentActionCallback) (*sl
 	return params, data.ResponseURL, nil
 }
 
-func (ctx *Context) getLoginSlackMessage(teamID string) (*slack.Msg, error) {
-	state, err := ctx.storeUserIDInState(teamID)
+func (ctx *Context) getLoginSlackMessage(state State) (*slack.Msg, error) {
+	stateKey, err := ctx.storeState(state)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +95,7 @@ func (ctx *Context) getLoginSlackMessage(teamID string) (*slack.Msg, error) {
 						Text:  "認証する",
 						Style: "primary",
 						Type:  "button",
-						URL:   ctx.getSalesforceAuthenticateURL(state),
+						URL:   ctx.getSalesforceAuthenticateURL(stateKey),
 					},
 				},
 			},
@@ -98,8 +103,8 @@ func (ctx *Context) getLoginSlackMessage(teamID string) (*slack.Msg, error) {
 	}, nil
 }
 
-func (ctx *Context) getAuthenticateSlackMessage(teamID string) (*slack.Msg, error) {
-	state, err := ctx.storeUserIDInState(teamID)
+func (ctx *Context) getAuthenticateSlackMessage(state State) (*slack.Msg, error) {
+	stateKey, err := ctx.storeState(state)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +120,7 @@ func (ctx *Context) getAuthenticateSlackMessage(teamID string) (*slack.Msg, erro
 						Text:  "認証する",
 						Style: "primary",
 						Type:  "button",
-						URL:   ctx.getSlackAuthenticateURL(teamID, state),
+						URL:   ctx.getSlackAuthenticateURL(state.TeamID, stateKey),
 					},
 				},
 			},
@@ -150,18 +155,24 @@ func (ctx *Context) getChannelSelectSlackMessage() (*slack.Msg, error) {
 	}, nil
 }
 
-func (ctx *Context) getSlackMessage(team, text string) (*slack.Msg, error) {
+func (ctx *Context) getSlackMessage(command slack.SlashCommand) (*slack.Msg, error) {
+	text := command.Text
+	state := State{
+		TeamID:      command.TeamID,
+		UserID:      command.UserID,
+		ResponseURL: command.ResponseURL,
+	}
 	client := ctx.createTimeTableClient()
 	if client.HTTPClient == nil || text == "login" {
-		return ctx.getLoginSlackMessage(team)
+		return ctx.getLoginSlackMessage(state)
 	}
 	timeTable, err := client.GetTimeTable()
 	if err != nil {
-		return ctx.getLoginSlackMessage(team)
+		return ctx.getLoginSlackMessage(state)
 	}
 	if text == "channel" {
 		if ctx.getSlackAccessTokenForUser() == "" {
-			return ctx.getAuthenticateSlackMessage(team)
+			return ctx.getAuthenticateSlackMessage(state)
 		}
 		return ctx.getChannelSelectSlackMessage()
 	}

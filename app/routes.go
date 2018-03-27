@@ -51,17 +51,18 @@ func (app *App) handleAsset(filename string, w http.ResponseWriter, r *http.Requ
 func (app *App) handleSlackAuthenticate(w http.ResponseWriter, r *http.Request) {
 	app.reconnectRedisIfNeeeded()
 	vars := mux.Vars(r)
-	state := vars["state"]
+	stateKey := vars["state"]
 	team := vars["team"]
 	ctx := app.createContext(r)
-	if userID := ctx.getUserIDForState(state); userID == "" {
+	state := ctx.getState(stateKey)
+	if state == nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	q := url.Values{
 		"client_id":    []string{app.SlackClientID},
 		"redirect_uri": []string{ctx.getSlackOAuthCallbackURL()},
-		"state":        []string{state},
+		"state":        []string{stateKey},
 		"scope":        []string{"chat:write:user"},
 		"team":         []string{team},
 	}
@@ -72,7 +73,7 @@ func (app *App) handleSlackAuthenticate(w http.ResponseWriter, r *http.Request) 
 func (app *App) handleSlackOAuthCallback(w http.ResponseWriter, r *http.Request) {
 	app.reconnectRedisIfNeeeded()
 	code := r.URL.Query().Get("code")
-	state := r.URL.Query().Get("state")
+	stateKey := r.URL.Query().Get("state")
 	ctx := app.createContext(r)
 	redirectURL := ctx.getSlackOAuthCallbackURL()
 	token, _, err := slack.GetOAuthToken(app.SlackClientID, app.SlackClientSecret, code, redirectURL, false)
@@ -80,41 +81,49 @@ func (app *App) handleSlackOAuthCallback(w http.ResponseWriter, r *http.Request)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	ctx.UserID = ctx.getUserIDForState(state)
+	state := ctx.getState(stateKey)
+	ctx.UserID = state.UserID
 	ctx.setSlackAccessToken(token)
-	ctx.deleteState(state)
+	ctx.deleteState(stateKey)
+	go func() {
+		params, _ := ctx.getChannelSelectSlackMessage()
+		params.Text = "認証が完了しました :white_check_mark:"
+		b, _ := json.Marshal(params)
+		http.Post(state.ResponseURL, "application/json", bytes.NewBuffer(b))
+	}()
 	http.Redirect(w, r, "/success", http.StatusFound)
 }
 
 func (app *App) handleSalesforceAuthenticate(w http.ResponseWriter, r *http.Request) {
 	app.reconnectRedisIfNeeeded()
 	vars := mux.Vars(r)
-	state := vars["state"]
+	stateKey := vars["state"]
 	ctx := app.createContext(r)
-	if userID := ctx.getUserIDForState(state); userID == "" {
+	state := ctx.getState(stateKey)
+	if state == nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	config := ctx.getSalesforceOAuth2Config()
 	config.Scopes = []string{"refresh_token", "full"}
-	url := config.AuthCodeURL(state, oauth2.AccessTypeOffline)
+	url := config.AuthCodeURL(stateKey, oauth2.AccessTypeOffline)
 	http.Redirect(w, r, url, http.StatusSeeOther)
 }
 
 func (app *App) handleSalesforceOAuthCallback(w http.ResponseWriter, r *http.Request) {
 	app.reconnectRedisIfNeeeded()
 	code := r.URL.Query().Get("code")
-	state := r.URL.Query().Get("state")
+	stateKey := r.URL.Query().Get("state")
 	ctx := app.createContext(r)
-	token, err := ctx.getSalesforceAccessToken(code, state)
+	token, err := ctx.getSalesforceAccessToken(code, stateKey)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	ctx.UserID = ctx.getUserIDForState(state)
+	state := ctx.getState(stateKey)
+	ctx.UserID = state.UserID
 	ctx.setSalesforceAccessToken(token)
-	teamID := ctx.getTeamIDForState(state)
-	http.Redirect(w, r, ctx.getSlackAuthenticateURL(teamID, state), http.StatusFound)
+	http.Redirect(w, r, ctx.getSlackAuthenticateURL(state.TeamID, stateKey), http.StatusFound)
 }
 
 func (app *App) handleSlashCommand(w http.ResponseWriter, r *http.Request) {
@@ -135,7 +144,7 @@ func (app *App) handleSlashCommand(w http.ResponseWriter, r *http.Request) {
 	ctx.UserID = s.UserID
 
 	go func() {
-		params, _ := ctx.getSlackMessage(s.TeamID, s.Text)
+		params, _ := ctx.getSlackMessage(s)
 		b, _ := json.Marshal(params)
 		http.Post(s.ResponseURL, "application/json", bytes.NewBuffer(b))
 	}()

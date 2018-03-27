@@ -16,19 +16,20 @@ func TestState(t *testing.T) {
 		return fmt.Sprintf("random-%d-%d", len, callCount)
 	}
 	ctx.RedisConn.Do("HSET", ctx.StateStoreKey, "random-24-1", "BAR")
-	state, err := ctx.storeUserIDInState("T123456")
+	state, err := ctx.storeState(State{TeamID: "T123456", UserID: "FOO", ResponseURL: "http://foo.com/bar"})
 	for _, test := range []Test{
 		{true, err == nil},
 		{"random-24-2", state},
-		{"FOO", ctx.getUserIDForState(state)},
-		{"T123456", ctx.getTeamIDForState(state)},
+		{"FOO", ctx.getState(state).UserID},
+		{"T123456", ctx.getState(state).TeamID},
+		{"http://foo.com/bar", ctx.getState(state).ResponseURL},
 	} {
 		test.Compare(t)
 	}
 	err = ctx.deleteState(state)
 	for _, test := range []Test{
 		{true, err == nil},
-		{"", ctx.getUserIDForState(state)},
+		{true, ctx.getState(state) == nil},
 	} {
 		test.Compare(t)
 	}

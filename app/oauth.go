@@ -82,7 +82,7 @@ func (ctx *Context) getSlackNotifyChannelForUser() string {
 	return ctx.getVariableInHash(ctx.NotifyChannelStoreKey, ctx.UserID)
 }
 
-func (ctx *Context) getSalesforceAccessToken(code string, state string) (*oauth2.Token, error) {
+func (ctx *Context) getSalesforceAccessToken(code, state string) (*oauth2.Token, error) {
 	config := ctx.getSalesforceOAuth2Config()
 	t, err := config.Exchange(context.TODO(), code)
 	if err != nil {
