@@ -113,8 +113,8 @@ func (app *App) handleSalesforceOAuthCallback(w http.ResponseWriter, r *http.Req
 	}
 	ctx.UserID = ctx.getUserIDForState(state)
 	ctx.setSalesforceAccessToken(token)
-	ctx.deleteState(state)
-	http.Redirect(w, r, "/success", http.StatusFound)
+	teamID := ctx.getTeamIDForState(state)
+	http.Redirect(w, r, ctx.getSlackAuthenticateURL(teamID, state), http.StatusFound)
 }
 
 func (app *App) handleSlashCommand(w http.ResponseWriter, r *http.Request) {
