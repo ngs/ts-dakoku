@@ -22,6 +22,7 @@ func TestState(t *testing.T) {
 		{"random-24-2", state},
 		{"FOO", ctx.getState(state).UserID},
 		{"T123456", ctx.getState(state).TeamID},
+		{"http://foo.com/bar", ctx.getState(state).ResponseURL},
 	} {
 		test.Compare(t)
 	}

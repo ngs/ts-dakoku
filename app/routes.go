@@ -85,6 +85,12 @@ func (app *App) handleSlackOAuthCallback(w http.ResponseWriter, r *http.Request)
 	ctx.UserID = state.UserID
 	ctx.setSlackAccessToken(token)
 	ctx.deleteState(stateKey)
+	go func() {
+		params, _ := ctx.getChannelSelectSlackMessage()
+		params.Text = "認証が完了しました :white_check_mark:"
+		b, _ := json.Marshal(params)
+		http.Post(state.ResponseURL, "application/json", bytes.NewBuffer(b))
+	}()
 	http.Redirect(w, r, "/success", http.StatusFound)
 }
 
