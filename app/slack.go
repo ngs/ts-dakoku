@@ -150,7 +150,9 @@ func (ctx *Context) getChannelSelectSlackMessage() (*slack.Msg, error) {
 	}, nil
 }
 
-func (ctx *Context) getSlackMessage(team, text string) (*slack.Msg, error) {
+func (ctx *Context) getSlackMessage(command slack.SlashCommand) (*slack.Msg, error) {
+	text := command.Text
+	team := command.TeamID
 	client := ctx.createTimeTableClient()
 	if client.HTTPClient == nil || text == "login" {
 		return ctx.getLoginSlackMessage(team)

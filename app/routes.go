@@ -135,7 +135,7 @@ func (app *App) handleSlashCommand(w http.ResponseWriter, r *http.Request) {
 	ctx.UserID = s.UserID
 
 	go func() {
-		params, _ := ctx.getSlackMessage(s.TeamID, s.Text)
+		params, _ := ctx.getSlackMessage(s)
 		b, _ := json.Marshal(params)
 		http.Post(s.ResponseURL, "application/json", bytes.NewBuffer(b))
 	}()
