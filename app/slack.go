@@ -38,7 +38,7 @@ func (ctx *Context) getActionCallback(data *slack.AttachmentActionCallback) (*sl
 	case actionTypeLeave:
 		{
 			attendance = 0
-			text = "退勤しました :house:"
+			text = "おつかれさまでした :house:"
 		}
 	case actionTypeRest:
 		{
@@ -53,7 +53,7 @@ func (ctx *Context) getActionCallback(data *slack.AttachmentActionCallback) (*sl
 	case actionTypeAttend:
 		{
 			attendance = 1
-			text = "出勤しました :office:"
+			text = "おはようございます :sun_with_face:"
 		}
 	}
 
